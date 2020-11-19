@@ -31,5 +31,15 @@ jobs:
     - name: Install package
       run: python -m pip install -e . 
     - name: Test with pytest
-      run: |
-        pytest
+      run: >
+        pytest tests/ 
+        --ignore tests/test_async_inference.py 
+        --ignore tests/test_covid_testing.py 
+        --ignore tests/test_demographics.py 
+        --ignore tests/test_epi_parameters.py 
+        --ignore tests/test_functional_seniors_residence.py 
+        --ignore tests/test_heuristic.py 
+        --ignore tests/test_models.py 
+        --ignore tests/test_reproducibility.py 
+        --ignore tests/test_should_send_message_gaen.py 
+        --ignore tests/test_tracker.py
