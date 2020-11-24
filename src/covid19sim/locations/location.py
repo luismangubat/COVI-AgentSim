@@ -7,6 +7,7 @@ import simpy
 import datetime
 from orderedset import OrderedSet
 from collections import namedtuple
+import mlflow
 import numpy as np
 import warnings
 
@@ -131,6 +132,12 @@ class Location(simpy.Resource):
 
         for matrix in [self.P_CONTACT, self.ADJUSTED_CONTACT_MATRIX]:
             assert matrix.shape[0] == matrix.shape[1], "contact matrix is not square"
+
+        # To visualize the layout of the city
+        # loc_file = 'locations.csv'
+        # with open(loc_file, 'a') as f:
+        #    f.write(f'{location_type}, {lat}, {lon}\n')
+        # mlflow.log_artifact(loc_file)
 
     def infectious_human(self):
         """

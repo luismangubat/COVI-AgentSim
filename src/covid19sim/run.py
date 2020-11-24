@@ -6,6 +6,7 @@ All settings provided via commandline will override the ones loaded through the 
 """
 import datetime
 import logging
+import mlflow
 import os
 import time
 import typing
@@ -257,8 +258,13 @@ def simulate(
         conf = {}
 
     conf["n_people"] = n_people
+
+    mlflow.log_param("init_infected", init_fraction_sick)
     conf["init_fraction_sick"] = init_fraction_sick
+
     conf["start_time"] = start_time
+
+    mlflow.log_param("simulation_days", simulation_days)
     conf["simulation_days"] = simulation_days
     conf["outfile"] = outfile
     conf["out_chunk_size"] = out_chunk_size

@@ -13,6 +13,7 @@ from runstats import Statistics
 
 import dill
 import networkx as nx
+import mlflow
 import numpy as np
 import pandas as pd
 
@@ -390,6 +391,8 @@ class Tracker(object):
                 server_address=city.conf.get("data_collection_server_address", default_datacollect_frontend_address),
             )
 
+        self.total_deaths = 0
+
     def initialize(self):
         self.summarize_population()
         self.fully_initialized = True
@@ -700,11 +703,17 @@ class Tracker(object):
 
         self.cases_per_day.append(0)
 
+        mlflow.log_metric("susceptible", self.s_per_day[-1])
         self.s_per_day.append(sum(h.is_susceptible for h in self.city.humans))
-        self.e_per_day.append(sum(h.is_exposed for h in self.city.humans))
+        self.e_per_day.append(sum(h.is_exposed for h in self.city.humans))\
+
+        mlflow.log_metric("infected", self.i_per_day[-1])
         self.i_per_day.append(sum(h.is_infectious for h in self.city.humans))
-        self.r_per_day.append(sum(h.is_removed for h in self.city.humans))
+
+        mlflow.log_metric("recovered", self.r_per_day[-1])
+        self.r_per_day.append(sum(h.is_removed for h in self.city.humans))  # recovered?
         self.ei_per_day.append(self.e_per_day[-1] + self.i_per_day[-1])
+
 
         for human in self.city.humans:
             if human.is_susceptible:
@@ -729,6 +738,10 @@ class Tracker(object):
         self.hospitalization_per_day.append(0)
         self.hospital_usage_per_day.append(num_humans_in_hospital)
         self.critical_per_day.append(0)
+
+        self.total_deaths += self.deaths_per_day[-1]  # To help more quickly calibrate the model for a new population
+        mlflow.log_metric("total_deaths", self.total_deaths)
+
         self.deaths_per_day.append(0)
 
         # recommendation levels related statistics
