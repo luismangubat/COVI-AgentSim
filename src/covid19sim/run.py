@@ -258,6 +258,7 @@ def simulate(
     if conf is None:
         conf = {}
 
+    mlflow.log_param("n_people", n_people)
     conf["n_people"] = n_people
 
     mlflow.log_param("init_infected", init_fraction_sick)
@@ -334,7 +335,7 @@ def simulate(
 
     # Run simulation until termination
     env.run(until=env.ts_initial + simulation_days * SECONDS_PER_DAY)
-
+    mlflow.log_metric("total_events", city.total_events)
     return city
 
 

@@ -934,10 +934,10 @@ class Human(BaseHuman):
         Yields:
             simpy.events.Event:
         """
-
-        previous_activity, next_activity = None, self.mobility_planner.get_next_activity()
+        #previous_activity, next_activity = None, self.mobility_planner.get_next_activity()
         while True:
-            yield self.env.timeout(14400)   # Every 1/6 of a day (in seconds) do something
+            yield self.env.timeout(8640)   # Every 1/10 of a day (in seconds) do something
+            self.city.total_events += 1
             #
             # if next_activity.human_dies:
             #     yield self.env.process(self.expire())

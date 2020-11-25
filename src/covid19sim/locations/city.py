@@ -118,6 +118,7 @@ class City:
         # messages they consume from their own (simulation-only!) personal mailbox
         self.global_mailbox: SimulatorMailboxType = defaultdict(dict)
         self.tracker.initialize()
+        self.total_events = 0
 
     def cleanup_global_mailbox(
             self,
@@ -462,93 +463,94 @@ class City:
         """
         humans_notified, infections_seeded = False, False
         last_day_idx = 0
-        while True:
-            current_day = (self.env.timestamp - self.start_time).days
-
-            # seed infections and change mixing constants (end of burn-in period)
-            if (
-                not infections_seeded
-                and self.env.timestamp == self.conf['COVID_SPREAD_START_TIME']
-            ):
-                self._initiate_infection_spread_and_modify_mixing_if_needed()
-                infections_seeded = True
-
-            # Notify humans to follow interventions on intervention day
-            if (
-                not humans_notified
-                and self.env.timestamp == self.conf.get('INTERVENTION_START_TIME')
-            ):
-                log("\n *** ****** *** ****** *** INITIATING INTERVENTION *** *** ****** *** ******\n", self.logfile)
-                log(self.conf['INTERVENTION'], self.logfile)
-
-                # if its a tracing method, load the class that can compute risk
-                if self.conf['RISK_MODEL'] != "":
-                    self.tracing_method = get_tracing_method(risk_model=self.conf['RISK_MODEL'], conf=self.conf)
-                    self.have_some_humans_download_the_app()
-
-                # initialize everyone from the baseline behavior
-                for human in self.humans:
-                    human.intervened_behavior.initialize()
-                    if self.tracing_method is not None:
-                        human.set_tracing_method(self.tracing_method)
-
-                # log reduction levels
-                log("\nCONTACT REDUCTION LEVELS (first one is not used) -", self.logfile)
-                for location_type, value in human.intervened_behavior.reduction_levels.items():
-                    log(f"{location_type}: {value} ", self.logfile)
-
-                humans_notified = True
-                if self.tracing_method is not None:
-                    self.tracker.track_daily_recommendation_levels(set_tracing_started_true=True)
-
-                # modify knobs because now people are more aware
-                if self.conf['ASSUME_NO_ENVIRONMENTAL_INFECTION_AFTER_INTERVENTION_START']:
-                    self.conf['_ENVIRONMENTAL_INFECTION_KNOB'] = 0.0
-
-                if self.conf['ASSUME_NO_UNKNOWN_INTERACTIONS_AFTER_INTERVENTION_START']:
-                    self.conf['_MEAN_DAILY_UNKNOWN_CONTACTS'] = 0.0
-
-                log("\n*** *** ****** *** ****** *** ****** *** ****** *** ****** *** ****** *** ****** *** ***\n", self.logfile)
-            # run city testing routine, providing test results for those who need them
-            # TODO: running this every hour of the day might not be correct.
-            # TODO: testing budget is used up at hour 0 if its small
-            self.covid_testing_facility.clear_test_queue()
-
-            alive_humans = []
-
-            # run non-app-related-stuff for all humans here (test seeking, infectiousness updates)
-            for human in self.humans:
-                if not human.is_dead:
-                    human.check_if_needs_covid_test()  # humans can decide to get tested whenever
-                    human.check_covid_symptom_start()
-                    human.check_covid_recovery()
-                    human.fill_infectiousness_history_map(current_day)
-                    alive_humans.append(human)
-
-            # now, run app-related stuff (risk assessment, message preparation, ...)
-            prev_risk_history_maps, update_messages = self.run_app(current_day, outfile, alive_humans)
-
-            # update messages may not be sent if the distribution strategy (e.g. GAEN) chooses to filter them
-            self.register_new_messages(
-                current_day_idx=current_day,
-                current_timestamp=self.env.timestamp,
-                update_messages=update_messages,
-                prev_human_risk_history_maps=prev_risk_history_maps,
-                new_human_risk_history_maps={h: h.risk_history_map for h in self.humans},
-            )
-
-            # for debugging/plotting a posteriori, track all human/location attributes...
-            self.tracker.track_humans(hd=self.hd, current_timestamp=self.env.timestamp)
-            # self.tracker.track_locations() # TODO
-
-            yield self.env.timeout(int(duration))
-            # finally, run end-of-day activities (if possible); these include mailbox cleanups, symptom updates, ...
-            if current_day != last_day_idx:
-                alive_humans = [human for human in self.humans if not human.is_dead]
-                last_day_idx = current_day
-                if self.conf.get("DIRECT_INTERVENTION", -1) == current_day:
-                    self.conf['GLOBAL_MOBILITY_SCALING_FACTOR'] = self.conf['GLOBAL_MOBILITY_SCALING_FACTOR']  / 2
-                self.do_daily_activies(current_day, alive_humans)
+        yield self.env.timeout(1)  # Let's not do anything too complicated at the moment
+        #while True:
+            # current_day = (self.env.timestamp - self.start_time).days
+            #
+            # # seed infections and change mixing constants (end of burn-in period)
+            # if (
+            #     not infections_seeded
+            #     and self.env.timestamp == self.conf['COVID_SPREAD_START_TIME']
+            # ):
+            #     self._initiate_infection_spread_and_modify_mixing_if_needed()
+            #     infections_seeded = True
+            #
+            # # Notify humans to follow interventions on intervention day
+            # if (
+            #     not humans_notified
+            #     and self.env.timestamp == self.conf.get('INTERVENTION_START_TIME')
+            # ):
+            #     log("\n *** ****** *** ****** *** INITIATING INTERVENTION *** *** ****** *** ******\n", self.logfile)
+            #     log(self.conf['INTERVENTION'], self.logfile)
+            #
+            #     # if its a tracing method, load the class that can compute risk
+            #     if self.conf['RISK_MODEL'] != "":
+            #         self.tracing_method = get_tracing_method(risk_model=self.conf['RISK_MODEL'], conf=self.conf)
+            #         self.have_some_humans_download_the_app()
+            #
+            #     # initialize everyone from the baseline behavior
+            #     for human in self.humans:
+            #         human.intervened_behavior.initialize()
+            #         if self.tracing_method is not None:
+            #             human.set_tracing_method(self.tracing_method)
+            #
+            #     # log reduction levels
+            #     log("\nCONTACT REDUCTION LEVELS (first one is not used) -", self.logfile)
+            #     for location_type, value in human.intervened_behavior.reduction_levels.items():
+            #         log(f"{location_type}: {value} ", self.logfile)
+            #
+            #     humans_notified = True
+            #     if self.tracing_method is not None:
+            #         self.tracker.track_daily_recommendation_levels(set_tracing_started_true=True)
+            #
+            #     # modify knobs because now people are more aware
+            #     if self.conf['ASSUME_NO_ENVIRONMENTAL_INFECTION_AFTER_INTERVENTION_START']:
+            #         self.conf['_ENVIRONMENTAL_INFECTION_KNOB'] = 0.0
+            #
+            #     if self.conf['ASSUME_NO_UNKNOWN_INTERACTIONS_AFTER_INTERVENTION_START']:
+            #         self.conf['_MEAN_DAILY_UNKNOWN_CONTACTS'] = 0.0
+            #
+            #     log("\n*** *** ****** *** ****** *** ****** *** ****** *** ****** *** ****** *** ****** *** ***\n", self.logfile)
+            # # run city testing routine, providing test results for those who need them
+            # # TODO: running this every hour of the day might not be correct.
+            # # TODO: testing budget is used up at hour 0 if its small
+            # self.covid_testing_facility.clear_test_queue()
+            #
+            # alive_humans = []
+            #
+            # # run non-app-related-stuff for all humans here (test seeking, infectiousness updates)
+            # for human in self.humans:
+            #     if not human.is_dead:
+            #         human.check_if_needs_covid_test()  # humans can decide to get tested whenever
+            #         human.check_covid_symptom_start()
+            #         human.check_covid_recovery()
+            #         human.fill_infectiousness_history_map(current_day)
+            #         alive_humans.append(human)
+            #
+            # # now, run app-related stuff (risk assessment, message preparation, ...)
+            # prev_risk_history_maps, update_messages = self.run_app(current_day, outfile, alive_humans)
+            #
+            # # update messages may not be sent if the distribution strategy (e.g. GAEN) chooses to filter them
+            # self.register_new_messages(
+            #     current_day_idx=current_day,
+            #     current_timestamp=self.env.timestamp,
+            #     update_messages=update_messages,
+            #     prev_human_risk_history_maps=prev_risk_history_maps,
+            #     new_human_risk_history_maps={h: h.risk_history_map for h in self.humans},
+            # )
+            #
+            # # for debugging/plotting a posteriori, track all human/location attributes...
+            # self.tracker.track_humans(hd=self.hd, current_timestamp=self.env.timestamp)
+            # # self.tracker.track_locations() # TODO
+            #
+            # yield self.env.timeout(int(duration))
+            # # finally, run end-of-day activities (if possible); these include mailbox cleanups, symptom updates, ...
+            # if current_day != last_day_idx:
+            #     alive_humans = [human for human in self.humans if not human.is_dead]
+            #     last_day_idx = current_day
+            #     if self.conf.get("DIRECT_INTERVENTION", -1) == current_day:
+            #         self.conf['GLOBAL_MOBILITY_SCALING_FACTOR'] = self.conf['GLOBAL_MOBILITY_SCALING_FACTOR']  / 2
+            #     self.do_daily_activies(current_day, alive_humans)
 
     def do_daily_activies(
             self,
