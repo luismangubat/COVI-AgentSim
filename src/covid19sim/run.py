@@ -209,8 +209,9 @@ def main(conf: DictConfig):
 
         Path(conf["outdir"]).mkdir(parents=True, exist_ok=True)
         filename = f"tracker_data_n_{conf['n_people']}_seed_{conf['seed']}_{timenow}.pkl"
-        data = extract_tracker_data(city.tracker, conf)
-        dump_tracker_data(data, conf["outdir"], filename)
+        # Turn off logging for now
+        #data = extract_tracker_data(city.tracker, conf)
+        #dump_tracker_data(data, conf["outdir"], filename)
     # Shutdown the data collection server if one's running
     if collection_server is not None:
         collection_server.stop_gracefully()
@@ -328,7 +329,8 @@ def simulate(
     for human in city.humans:
         env.process(human.run())
 
-    env.process(console_logger.run(env, city=city))
+    # Turn logging off for now
+    #env.process(console_logger.run(env, city=city))
 
     # Run simulation until termination
     env.run(until=env.ts_initial + simulation_days * SECONDS_PER_DAY)

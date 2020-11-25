@@ -43,13 +43,15 @@ def log(str, logfile=None, timestamp=False):
         logfile ([type], optional): [description]. Defaults to None.
         timestamp (bool, optional): [description]. Defaults to False.
     """
-    if timestamp:
-        str = f"[{datetime.datetime.now()}] {str}"
+    # Turn logging off for now
+    pass
+    #if timestamp:
+    #    str = f"[{datetime.datetime.now()}] {str}"
 
-    print(str)
-    if logfile is not None:
-        with open(logfile, mode='a') as f:
-            print(str, file=f)
+    #print(str)
+    #if logfile is not None:
+    #    with open(logfile, mode='a') as f:
+    #        print(str, file=f)
 
 
 def _normalize_scores(scores):

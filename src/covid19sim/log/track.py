@@ -397,224 +397,233 @@ class Tracker(object):
         self.summarize_population()
         self.fully_initialized = True
 
+    # Turn off logging for now. This is turning out to be a harder task than I thought it would be.
     def summarize_population(self):
-        """
-        Logs statistics related to demographics.
-        """
-        # warn by (*) string if something is off in percentage from census by this much amount
-        WARN_RELATIVE_PERCENTAGE_THRESHOLD = 25
-        WARN_SIGNAL = " (**#@#**) "
+        pass
 
-        log("\n######## SIMULATOR KNOBS #########", self.logfile)
-        log(f"HOUSEHOLD_ASSORTATIVITY_STRENGTH: {self.conf['HOUSEHOLD_ASSORTATIVITY_STRENGTH']}", self.logfile)
-        log(f"WORKPLACE_ASSORTATIVITY_STRENGTH: {self.conf['WORKPLACE_ASSORTATIVITY_STRENGTH']}", self.logfile)
-        log(f"P_INVITATION_ACCEPTANCE: {self.conf['P_INVITATION_ACCEPTANCE']}", self.logfile)
-        log(f"BEGIN_PREFERENTIAL_ATTACHMENT_FACTOR: {self.conf['BEGIN_PREFERENTIAL_ATTACHMENT_FACTOR']}", self.logfile)
-        log(f"END_PREFERENTIAL_ATTACHMENT_FACTOR: {self.conf['END_PREFERENTIAL_ATTACHMENT_FACTOR']}", self.logfile)
-        log(f"P_HOUSE_OVER_MISC_FOR_SOCIALS: {self.conf['P_HOUSE_OVER_MISC_FOR_SOCIALS']}", self.logfile)
-        log(f"CONTAGION_KNOB: {self.conf['CONTAGION_KNOB']}", self.logfile)
-        log(f"ENVIRONMENTAL_INFECTION_KNOB: {self.conf['ENVIRONMENTAL_INFECTION_KNOB']}", self.logfile)
-        log(f"TIME_SPENT_SCALE_FACTOR_FOR_SHORT_ACTIVITIES: {self.conf['TIME_SPENT_SCALE_FACTOR_FOR_SHORT_ACTIVITIES']}", self.logfile)
-        log(f"TIME_SPENT_SCALE_FACTOR_FOR_WORK: {self.conf['TIME_SPENT_SCALE_FACTOR_FOR_WORK']}", self.logfile)
-        log(f"TIME_SPENT_SCALE_FACTOR_SLEEP_AWAKE: {self.conf['TIME_SPENT_SCALE_FACTOR_SLEEP_AWAKE']}", self.logfile)
-        log(f"GLOBAL_MOBILITY_SCALING_FACTOR: {self.conf['GLOBAL_MOBILITY_SCALING_FACTOR']}", self.logfile)
-
-        log("\n######## DEMOGRAPHICS / SYNTHETIC POPULATION #########", self.logfile)
-        log(f"NB: (i) census numbers are in brackets. (ii) {WARN_SIGNAL} marks a {WARN_RELATIVE_PERCENTAGE_THRESHOLD} % realtive deviation from census\n", self.logfile)
-        # age distribution
-        x = np.array([h.age for h in self.city.humans])
-        cns_avg = self.conf['AVERAGE_AGE_REGION']
-        cns_median = self.conf['MEDIAN_AGE_REGION']
-        log(f"Age (census) - mean: {x.mean():3.3f} ({cns_avg}), median: {np.median(x):3.0f} ({cns_median}), std: {x.std():3.3f}", self.logfile)
-
-        # gender distribution
-        str_to_print = "Gender: "
-        x = np.array([h.sex for h in self.city.humans])
-        for z in np.unique(x):
-            p = 100 * x[x==z].shape[0]/self.n_people
-            str_to_print += f"{z}: {p:2.3f} % | "
-        log(str_to_print, self.logfile)
-
-        ###### house initialization
-        log("\n*** House allocation *** ", self.logfile)
-        # senior residencies
-        self.n_senior_residency_residents = sum(len(sr.residents) for sr in self.city.senior_residences)
-        p = 100*self.n_senior_residency_residents / self.n_people
-        cns = 100*self.conf['P_COLLECTIVE']
-        warn = WARN_SIGNAL if 100*abs(p-cns)/cns > WARN_RELATIVE_PERCENTAGE_THRESHOLD else ""
-        log(f"{warn}Total ( %) number of residents in senior residencies (census): {self.n_senior_residency_residents} ({p:2.2f} %) ({cns:2.2f})", self.logfile)
-
-        # house allocation
-        n_houses = len(self.city.households)
-        sizes = np.zeros(n_houses)
-        multigenerationals, only_adults = np.zeros(n_houses), np.zeros(n_houses)
-        solo_ages = []
-        for i, house in enumerate(self.city.households):
-            sizes[i] = len(house.residents)
-            multigenerationals[i] = house.allocation_type.multigenerational
-            only_adults[i] = min(h.age for h in house.residents) > self.conf['MAX_AGE_CHILDREN']
-            # solo dwellers
-            if len(house.residents) == 1:
-                solo_ages.append(house.residents[0].age)
-
-        ## counts
-        log(f"Total houses: {n_houses}", self.logfile)
-        p = sizes.mean()
-        cns = self.conf['AVG_HOUSEHOLD_SIZE']
-        warn = WARN_SIGNAL if 100*abs(p-cns)/cns > WARN_RELATIVE_PERCENTAGE_THRESHOLD else ""
-        log(f"{warn}Average house size - {p: 2.3f} ({cns: 2.3f})", self.logfile)
-        ## size
-        census = self.conf['P_HOUSEHOLD_SIZE']
-        str_to_print = "Household size - simulation% (census): "
-        for i,z in enumerate(sorted(np.unique(sizes))):
-            p = 100 * (sizes == z).sum() / n_houses
-            cns = 100*census[i]
-            warn = WARN_SIGNAL if 100*abs(p-cns)/cns > WARN_RELATIVE_PERCENTAGE_THRESHOLD else ""
-            str_to_print += f"{warn} {z}: {p:2.2f} % ({cns: 3.2f}) | "
-        log(str_to_print, self.logfile)
-
-        # solo dwellers
-        estimated_solo_dwellers_mean_age = sum([x[2] * (x[0] + x[1]) / 2 for x in self.conf['P_AGE_SOLO_DWELLERS_GIVEN_HOUSESIZE_1']])
-        simulated_solo_dwellers_age_given_housesize1 = [[x[0], x[1], 0] for x in self.conf['P_AGE_SOLO_DWELLERS_GIVEN_HOUSESIZE_1']]
-        n_solo_houses = len(solo_ages) + 1e-6 # to avoid ZeroDivisionError
-        for age in solo_ages:
-            for i,x in enumerate(self.conf['P_AGE_SOLO_DWELLERS_GIVEN_HOUSESIZE_1']):
-                if x[0] <= age <= x[1]:
-                    simulated_solo_dwellers_age_given_housesize1[i][2] += 1
-        simulated_solo_dwellers_age_given_housesize1 = [[x[0], x[1], x[2]/n_solo_houses] for x in simulated_solo_dwellers_age_given_housesize1]
-        simulated_solo_dwellers_mean_age = sum([x[2] * (x[0] + x[1]) / 2 for x in simulated_solo_dwellers_age_given_housesize1])
-        warn = WARN_SIGNAL if 100*abs(estimated_solo_dwellers_mean_age-simulated_solo_dwellers_mean_age)/estimated_solo_dwellers_mean_age > WARN_RELATIVE_PERCENTAGE_THRESHOLD else ""
-        str_to_print = f"{warn}Solo dwellers : Average age absolute: {np.mean(solo_ages): 2.2f} (Average with mid point of age groups - simulated:{simulated_solo_dwellers_mean_age: 2.2f} census:{estimated_solo_dwellers_mean_age: 2.2f}) | "
-        # str_to_print += f"Median age: {np.median(solo_ages)}"
-        log(str_to_print, self.logfile)
-
-        ## type
-        str_to_print = "Household type: "
-        p = 100 * multigenerationals.mean()
-        cns = 100*self.conf['P_MULTIGENERATIONAL_FAMILY']
-        warn = WARN_SIGNAL if 100*abs(p-cns)/cns > WARN_RELATIVE_PERCENTAGE_THRESHOLD else ""
-        str_to_print += f"{warn}multi-generation: {p:2.2f} % ({cns:2.2f}) | "
-        p = 100 * only_adults.mean()
-        str_to_print += f"Only adults: {p:2.2f} % | "
-        log(str_to_print, self.logfile)
-
-        # allocation types
-        allocation_types = [res.allocation_type for res in self.city.households]
-        living_arrangements = [res.basestr for res in allocation_types]
-        census = np.array([x.probability for x in allocation_types])
-        allocation_types = np.array(living_arrangements)
-        str_to_print = "Allocation types: "
-        for atype in np.unique(allocation_types):
-            p = 100*(allocation_types == atype).mean()
-            cns = 100*census[allocation_types == atype][0].item()
-            warn = WARN_SIGNAL if 100*abs(p-cns)/cns > WARN_RELATIVE_PERCENTAGE_THRESHOLD else ""
-            str_to_print += f"{warn}{atype}: {p:2.3f} %  ({cns: 2.2f})| "
-        log(str_to_print, self.logfile)
-
-        ###### location initialization
-        log("\n *** Locations *** ", self.logfile)
-
-        # counts
-        str_to_print = "Counts: "
-        for location_type in ALL_LOCATIONS:
-            n_locations = len(getattr(self.city, f"{location_type.lower()}s"))
-            str_to_print += f"{location_type}: {n_locations} | "
-        log(str_to_print, self.logfile)
-
-        ####### work force
-        log("\n *** Workforce *** ", self.logfile)
-
-        # workplaces, stores, miscs
-        all_workplaces = [self.city.workplaces, self.city.stores, self.city.miscs]
-        for workplaces in all_workplaces:
-            subnames = defaultdict(lambda : {'count': 0, 'n_workers':0})
-            n_workers = np.zeros_like(workplaces)
-            avg_workers_age = np.zeros_like(workplaces)
-            for i, workplace in enumerate(workplaces):
-                n_workers[i] = workplace.n_workers
-                avg_workers_age[i] = np.mean([worker.age for worker in workplace.workers])
-                if workplace.location_type == "WORKPLACE":
-                    subnames[workplace.name.split(":")[0]]['count'] += 1
-                    subnames[workplace.name.split(":")[0]]['n_workers'] += workplace.n_workers
-            if len(workplaces) > 0:
-                name = workplaces[0].location_type
-                log(f"{name} - Total workforce: {n_workers.sum()} | Average number of workers: {n_workers.mean(): 2.2f} | Average age of workers: {avg_workers_age.mean(): 2.2f}", self.logfile)
-            if subnames:
-                for workplace_type, val in subnames.items():
-                    log(f"\tNumber of {workplace_type} - {val['count']}. Total number of workers - {val['n_workers']}", self.logfile)
-
-        # hospitals
-        n_nurses = np.zeros_like(self.city.hospitals)
-        n_doctors = np.zeros_like(self.city.hospitals)
-        for i,hospital in enumerate(self.city.hospitals):
-            n_nurses[i] = hospital.n_nurses
-            n_doctors[i] = hospital.n_doctors
-
-        n_nurses_senior_residences = np.zeros_like(self.city.senior_residences)
-        for i,senior_residence in enumerate(self.city.senior_residences):
-            n_nurses_senior_residences[i] = senior_residence.n_nurses
-
-        total_workforce = n_nurses.sum() + n_doctors.sum() + n_nurses_senior_residences.sum()
-        str_to_print = f"HOSPITALS - Total workforce: {total_workforce} "
-        str_to_print += f"| Number of doctors: {n_doctors.sum()} "
-        str_to_print += f"| Number of nurses: {n_nurses.sum()} "
-        str_to_print += f"| Number of nurses at SENIOR_RESIDENCES: {n_nurses_senior_residences.sum()}"
-        log(str_to_print, self.logfile)
-
-        # schools
-        n_teachers = np.zeros_like(self.city.schools)
-        n_students = np.zeros_like(self.city.schools)
-        subnames = defaultdict(lambda : {'count':0, 'n_teachers':0, 'n_students':0})
-        for i, school in enumerate(self.city.schools):
-            n_teachers[i] = school.n_teachers
-            n_students[i] = school.n_students
-            subname = school.name.split(":")[0]
-            subnames[subname]['count'] += 1
-            subnames[subname]['n_teachers'] += school.n_teachers
-            subnames[subname]['n_students'] += school.n_students
-
-        str_to_print = f"SCHOOL - Number of teachers: {n_teachers.sum()} "
-        str_to_print += f"| Number of students: {n_students.sum()}"
-        str_to_print += f"| Average number of teachers: {n_teachers.mean(): 2.2f}"
-        str_to_print += f"| Average number of students: {n_students.mean(): 2.2f}"
-        log(str_to_print, self.logfile)
-
-        for subname, val in subnames.items():
-            log(f"\tNumber of {subname} - {val['count']}. Number of students: {val['n_students']}. Number of teachers: {val['n_teachers']}", self.logfile)
-
-        log("\n *** Disease related initialization stats *** ", self.logfile)
-        # disease related
-        self.frac_asymptomatic = sum(h.is_asymptomatic for h in self.city.humans)/self.n_people
-        log(f"Percentage of population that is asymptomatic {100*self.frac_asymptomatic: 2.3f}", self.logfile)
-
-    def log_seed_infections(self):
-        """
-        Logs who is seeded as infected.
-        """
-        log("\n *** ****** *** ****** *** COVID infection seeded *** *** ****** *** ******\n", self.logfile)
-
-        self.n_infected_init = self.city.n_init_infected
-        log(f"Total number of infected humans {self.n_infected_init}", self.logfile)
-        for human in self.city.humans:
-            if human.is_exposed:
-                self.init_infected.append(human)
-                log(f"\t{human} @ {human.household} living with {len(human.household.residents) - 1} other residents", self.logfile)
-
-        log(f"\nPREFERENTIAL_ATTACHMENT_FACTOR: {self.conf['END_PREFERENTIAL_ATTACHMENT_FACTOR']}", self.logfile)
-        log("\n*** *** ****** *** ****** *** ****** *** ****** *** ****** *** ****** *** ****** *** ***\n", self.logfile)
-
-        self.start_tracking = True
-
+#     def summarize_population(self):
+        # """
+        # Logs statistics related to demographics.
+        # """
+        # # warn by (*) string if something is off in percentage from census by this much amount
+        # WARN_RELATIVE_PERCENTAGE_THRESHOLD = 25
+        # WARN_SIGNAL = " (**#@#**) "
         #
-        self.cases_per_day = [self.n_infected_init]
-        self.s_per_day = [self.n_people - self.n_infected_init]
-        self.e_per_day = [self.n_infected_init]
-        self.i_per_day = [0]
-        self.r_per_day = [0]
-        self.ei_per_day = [self.n_infected_init]
+        # log("\n######## SIMULATOR KNOBS #########", self.logfile)
+        # log(f"HOUSEHOLD_ASSORTATIVITY_STRENGTH: {self.conf['HOUSEHOLD_ASSORTATIVITY_STRENGTH']}", self.logfile)
+        # log(f"WORKPLACE_ASSORTATIVITY_STRENGTH: {self.conf['WORKPLACE_ASSORTATIVITY_STRENGTH']}", self.logfile)
+        # log(f"P_INVITATION_ACCEPTANCE: {self.conf['P_INVITATION_ACCEPTANCE']}", self.logfile)
+        # log(f"BEGIN_PREFERENTIAL_ATTACHMENT_FACTOR: {self.conf['BEGIN_PREFERENTIAL_ATTACHMENT_FACTOR']}", self.logfile)
+        # log(f"END_PREFERENTIAL_ATTACHMENT_FACTOR: {self.conf['END_PREFERENTIAL_ATTACHMENT_FACTOR']}", self.logfile)
+        # log(f"P_HOUSE_OVER_MISC_FOR_SOCIALS: {self.conf['P_HOUSE_OVER_MISC_FOR_SOCIALS']}", self.logfile)
+        # log(f"CONTAGION_KNOB: {self.conf['CONTAGION_KNOB']}", self.logfile)
+        # log(f"ENVIRONMENTAL_INFECTION_KNOB: {self.conf['ENVIRONMENTAL_INFECTION_KNOB']}", self.logfile)
+        # log(f"TIME_SPENT_SCALE_FACTOR_FOR_SHORT_ACTIVITIES: {self.conf['TIME_SPENT_SCALE_FACTOR_FOR_SHORT_ACTIVITIES']}", self.logfile)
+        # log(f"TIME_SPENT_SCALE_FACTOR_FOR_WORK: {self.conf['TIME_SPENT_SCALE_FACTOR_FOR_WORK']}", self.logfile)
+        # log(f"TIME_SPENT_SCALE_FACTOR_SLEEP_AWAKE: {self.conf['TIME_SPENT_SCALE_FACTOR_SLEEP_AWAKE']}", self.logfile)
+        # log(f"GLOBAL_MOBILITY_SCALING_FACTOR: {self.conf['GLOBAL_MOBILITY_SCALING_FACTOR']}", self.logfile)
+        #
+        # log("\n######## DEMOGRAPHICS / SYNTHETIC POPULATION #########", self.logfile)
+        # log(f"NB: (i) census numbers are in brackets. (ii) {WARN_SIGNAL} marks a {WARN_RELATIVE_PERCENTAGE_THRESHOLD} % realtive deviation from census\n", self.logfile)
+        # # age distribution
+        # x = np.array([h.age for h in self.city.humans])
+        # cns_avg = self.conf['AVERAGE_AGE_REGION']
+        # cns_median = self.conf['MEDIAN_AGE_REGION']
+        # log(f"Age (census) - mean: {x.mean():3.3f} ({cns_avg}), median: {np.median(x):3.0f} ({cns_median}), std: {x.std():3.3f}", self.logfile)
+        #
+        # # gender distribution
+        # str_to_print = "Gender: "
+        # x = np.array([h.sex for h in self.city.humans])
+        # for z in np.unique(x):
+        #     p = 100 * x[x==z].shape[0]/self.n_people
+        #     str_to_print += f"{z}: {p:2.3f} % | "
+        # log(str_to_print, self.logfile)
+        #
+        # ###### house initialization
+        # log("\n*** House allocation *** ", self.logfile)
+        # # senior residencies
+        # self.n_senior_residency_residents = sum(len(sr.residents) for sr in self.city.senior_residences)
+        # p = 100*self.n_senior_residency_residents / self.n_people
+        # cns = 100*self.conf['P_COLLECTIVE']
+        # warn = WARN_SIGNAL if 100*abs(p-cns)/cns > WARN_RELATIVE_PERCENTAGE_THRESHOLD else ""
+        # log(f"{warn}Total ( %) number of residents in senior residencies (census): {self.n_senior_residency_residents} ({p:2.2f} %) ({cns:2.2f})", self.logfile)
+        #
+        # # house allocation
+        # n_houses = len(self.city.households)
+        # sizes = np.zeros(n_houses)
+        # multigenerationals, only_adults = np.zeros(n_houses), np.zeros(n_houses)
+        # solo_ages = []
+        # for i, house in enumerate(self.city.households):
+        #     sizes[i] = len(house.residents)
+        #     multigenerationals[i] = house.allocation_type.multigenerational
+        #     only_adults[i] = min(h.age for h in house.residents) > self.conf['MAX_AGE_CHILDREN']
+        #     # solo dwellers
+        #     if len(house.residents) == 1:
+        #         solo_ages.append(house.residents[0].age)
+        #
+        # ## counts
+        # log(f"Total houses: {n_houses}", self.logfile)
+        # p = sizes.mean()
+        # cns = self.conf['AVG_HOUSEHOLD_SIZE']
+        # warn = WARN_SIGNAL if 100*abs(p-cns)/cns > WARN_RELATIVE_PERCENTAGE_THRESHOLD else ""
+        # log(f"{warn}Average house size - {p: 2.3f} ({cns: 2.3f})", self.logfile)
+        # ## size
+        # census = self.conf['P_HOUSEHOLD_SIZE']
+        # str_to_print = "Household size - simulation% (census): "
+        # for i,z in enumerate(sorted(np.unique(sizes))):
+        #     p = 100 * (sizes == z).sum() / n_houses
+        #     cns = 100*census[i]
+        #     warn = WARN_SIGNAL if 100*abs(p-cns)/cns > WARN_RELATIVE_PERCENTAGE_THRESHOLD else ""
+        #     str_to_print += f"{warn} {z}: {p:2.2f} % ({cns: 3.2f}) | "
+        # log(str_to_print, self.logfile)
+        #
+        # # solo dwellers
+        # estimated_solo_dwellers_mean_age = sum([x[2] * (x[0] + x[1]) / 2 for x in self.conf['P_AGE_SOLO_DWELLERS_GIVEN_HOUSESIZE_1']])
+        # simulated_solo_dwellers_age_given_housesize1 = [[x[0], x[1], 0] for x in self.conf['P_AGE_SOLO_DWELLERS_GIVEN_HOUSESIZE_1']]
+        # n_solo_houses = len(solo_ages) + 1e-6 # to avoid ZeroDivisionError
+        # for age in solo_ages:
+        #     for i,x in enumerate(self.conf['P_AGE_SOLO_DWELLERS_GIVEN_HOUSESIZE_1']):
+        #         if x[0] <= age <= x[1]:
+        #             simulated_solo_dwellers_age_given_housesize1[i][2] += 1
+        # simulated_solo_dwellers_age_given_housesize1 = [[x[0], x[1], x[2]/n_solo_houses] for x in simulated_solo_dwellers_age_given_housesize1]
+        # simulated_solo_dwellers_mean_age = sum([x[2] * (x[0] + x[1]) / 2 for x in simulated_solo_dwellers_age_given_housesize1])
+        # warn = WARN_SIGNAL if 100*abs(estimated_solo_dwellers_mean_age-simulated_solo_dwellers_mean_age)/estimated_solo_dwellers_mean_age > WARN_RELATIVE_PERCENTAGE_THRESHOLD else ""
+        # str_to_print = f"{warn}Solo dwellers : Average age absolute: {np.mean(solo_ages): 2.2f} (Average with mid point of age groups - simulated:{simulated_solo_dwellers_mean_age: 2.2f} census:{estimated_solo_dwellers_mean_age: 2.2f}) | "
+        # # str_to_print += f"Median age: {np.median(solo_ages)}"
+        # log(str_to_print, self.logfile)
+        #
+        # ## type
+        # str_to_print = "Household type: "
+        # p = 100 * multigenerationals.mean()
+        # cns = 100*self.conf['P_MULTIGENERATIONAL_FAMILY']
+        # warn = WARN_SIGNAL if 100*abs(p-cns)/cns > WARN_RELATIVE_PERCENTAGE_THRESHOLD else ""
+        # str_to_print += f"{warn}multi-generation: {p:2.2f} % ({cns:2.2f}) | "
+        # p = 100 * only_adults.mean()
+        # str_to_print += f"Only adults: {p:2.2f} % | "
+        # log(str_to_print, self.logfile)
+        #
+        # # allocation types
+        # allocation_types = [res.allocation_type for res in self.city.households]
+        # living_arrangements = [res.basestr for res in allocation_types]
+        # census = np.array([x.probability for x in allocation_types])
+        # allocation_types = np.array(living_arrangements)
+        # str_to_print = "Allocation types: "
+        # for atype in np.unique(allocation_types):
+        #     p = 100*(allocation_types == atype).mean()
+        #     cns = 100*census[allocation_types == atype][0].item()
+        #     warn = WARN_SIGNAL if 100*abs(p-cns)/cns > WARN_RELATIVE_PERCENTAGE_THRESHOLD else ""
+        #     str_to_print += f"{warn}{atype}: {p:2.3f} %  ({cns: 2.2f})| "
+        # log(str_to_print, self.logfile)
+        #
+        # ###### location initialization
+        # log("\n *** Locations *** ", self.logfile)
+        #
+        # # counts
+        # str_to_print = "Counts: "
+        # for location_type in ALL_LOCATIONS:
+        #     n_locations = len(getattr(self.city, f"{location_type.lower()}s"))
+        #     str_to_print += f"{location_type}: {n_locations} | "
+        # log(str_to_print, self.logfile)
+        #
+        # ####### work force
+        # log("\n *** Workforce *** ", self.logfile)
+        #
+        # # workplaces, stores, miscs
+        # all_workplaces = [self.city.workplaces, self.city.stores, self.city.miscs]
+        # for workplaces in all_workplaces:
+        #     subnames = defaultdict(lambda : {'count': 0, 'n_workers':0})
+        #     n_workers = np.zeros_like(workplaces)
+        #     avg_workers_age = np.zeros_like(workplaces)
+        #     for i, workplace in enumerate(workplaces):
+        #         n_workers[i] = workplace.n_workers
+        #         avg_workers_age[i] = np.mean([worker.age for worker in workplace.workers])
+        #         if workplace.location_type == "WORKPLACE":
+        #             subnames[workplace.name.split(":")[0]]['count'] += 1
+        #             subnames[workplace.name.split(":")[0]]['n_workers'] += workplace.n_workers
+        #     if len(workplaces) > 0:
+        #         name = workplaces[0].location_type
+        #         log(f"{name} - Total workforce: {n_workers.sum()} | Average number of workers: {n_workers.mean(): 2.2f} | Average age of workers: {avg_workers_age.mean(): 2.2f}", self.logfile)
+        #     if subnames:
+        #         for workplace_type, val in subnames.items():
+        #             log(f"\tNumber of {workplace_type} - {val['count']}. Total number of workers - {val['n_workers']}", self.logfile)
+        #
+        # # hospitals
+        # n_nurses = np.zeros_like(self.city.hospitals)
+        # n_doctors = np.zeros_like(self.city.hospitals)
+        # for i,hospital in enumerate(self.city.hospitals):
+        #     n_nurses[i] = hospital.n_nurses
+        #     n_doctors[i] = hospital.n_doctors
+        #
+        # n_nurses_senior_residences = np.zeros_like(self.city.senior_residences)
+        # for i,senior_residence in enumerate(self.city.senior_residences):
+        #     n_nurses_senior_residences[i] = senior_residence.n_nurses
+        #
+        # total_workforce = n_nurses.sum() + n_doctors.sum() + n_nurses_senior_residences.sum()
+        # str_to_print = f"HOSPITALS - Total workforce: {total_workforce} "
+        # str_to_print += f"| Number of doctors: {n_doctors.sum()} "
+        # str_to_print += f"| Number of nurses: {n_nurses.sum()} "
+        # str_to_print += f"| Number of nurses at SENIOR_RESIDENCES: {n_nurses_senior_residences.sum()}"
+        # log(str_to_print, self.logfile)
+        #
+        # # schools
+        # n_teachers = np.zeros_like(self.city.schools)
+        # n_students = np.zeros_like(self.city.schools)
+        # subnames = defaultdict(lambda : {'count':0, 'n_teachers':0, 'n_students':0})
+        # for i, school in enumerate(self.city.schools):
+        #     n_teachers[i] = school.n_teachers
+        #     n_students[i] = school.n_students
+        #     subname = school.name.split(":")[0]
+        #     subnames[subname]['count'] += 1
+        #     subnames[subname]['n_teachers'] += school.n_teachers
+        #     subnames[subname]['n_students'] += school.n_students
+        #
+        # str_to_print = f"SCHOOL - Number of teachers: {n_teachers.sum()} "
+        # str_to_print += f"| Number of students: {n_students.sum()}"
+        # str_to_print += f"| Average number of teachers: {n_teachers.mean(): 2.2f}"
+        # str_to_print += f"| Average number of students: {n_students.mean(): 2.2f}"
+        # log(str_to_print, self.logfile)
+        #
+        # for subname, val in subnames.items():
+        #     log(f"\tNumber of {subname} - {val['count']}. Number of students: {val['n_students']}. Number of teachers: {val['n_teachers']}", self.logfile)
+        #
+        # log("\n *** Disease related initialization stats *** ", self.logfile)
+        # # disease related
+        # self.frac_asymptomatic = sum(h.is_asymptomatic for h in self.city.humans)/self.n_people
+        # log(f"Percentage of population that is asymptomatic {100*self.frac_asymptomatic: 2.3f}", self.logfile)
 
-        # risk model
-        self.risk_precision_daily = [self.compute_risk_precision()]
+# Turn off logging for now
+    def log_seed_infections(self):
+        pass
+
+    # def log_seed_infections(self):
+    #     """
+    #     Logs who is seeded as infected.
+    #     """
+    #     log("\n *** ****** *** ****** *** COVID infection seeded *** *** ****** *** ******\n", self.logfile)
+    #
+    #     self.n_infected_init = self.city.n_init_infected
+    #     log(f"Total number of infected humans {self.n_infected_init}", self.logfile)
+    #     for human in self.city.humans:
+    #         if human.is_exposed:
+    #             self.init_infected.append(human)
+    #             log(f"\t{human} @ {human.household} living with {len(human.household.residents) - 1} other residents", self.logfile)
+    #
+    #     log(f"\nPREFERENTIAL_ATTACHMENT_FACTOR: {self.conf['END_PREFERENTIAL_ATTACHMENT_FACTOR']}", self.logfile)
+    #     log("\n*** *** ****** *** ****** *** ****** *** ****** *** ****** *** ****** *** ****** *** ***\n", self.logfile)
+    #
+    #     self.start_tracking = True
+    #
+    #     #
+    #     self.cases_per_day = [self.n_infected_init]
+    #     self.s_per_day = [self.n_people - self.n_infected_init]
+    #     self.e_per_day = [self.n_infected_init]
+    #     self.i_per_day = [0]
+    #     self.r_per_day = [0]
+    #     self.ei_per_day = [self.n_infected_init]
+    #
+    #     # risk model
+    #     self.risk_precision_daily = [self.compute_risk_precision()]
+
 
     def compute_generation_time(self):
         """
@@ -703,14 +712,14 @@ class Tracker(object):
 
         self.cases_per_day.append(0)
 
-        mlflow.log_metric("susceptible", self.s_per_day[-1])
+        #mlflow.log_metric("susceptible", self.s_per_day[-1])
         self.s_per_day.append(sum(h.is_susceptible for h in self.city.humans))
         self.e_per_day.append(sum(h.is_exposed for h in self.city.humans))\
 
-        mlflow.log_metric("infected", self.i_per_day[-1])
+        #mlflow.log_metric("infected", self.i_per_day[-1])
         self.i_per_day.append(sum(h.is_infectious for h in self.city.humans))
 
-        mlflow.log_metric("recovered", self.r_per_day[-1])
+        #mlflow.log_metric("recovered", self.r_per_day[-1])
         self.r_per_day.append(sum(h.is_removed for h in self.city.humans))  # recovered?
         self.ei_per_day.append(self.e_per_day[-1] + self.i_per_day[-1])
 
@@ -740,7 +749,7 @@ class Tracker(object):
         self.critical_per_day.append(0)
 
         self.total_deaths += self.deaths_per_day[-1]  # To help more quickly calibrate the model for a new population
-        mlflow.log_metric("total_deaths", self.total_deaths)
+        #mlflow.log_metric("total_deaths", self.total_deaths)
 
         self.deaths_per_day.append(0)
 
@@ -1732,6 +1741,10 @@ class Tracker(object):
 
         return all_effective_contacts / (days * self.n_people), all_healthy_effective_contacts / all_healthy_days, scale_factor
 
+    # Turn off logging for now
+    def write_metrics(self):
+        pass
+    '''
     def write_metrics(self):
         """
         Writes various metrics to `self.logfile`. Prints them if `self.logfile` is None.
@@ -1907,6 +1920,7 @@ class Tracker(object):
         plotrt = PlotRt(R_T_MAX=4, sigma=0.25, GAMMA=1.0 / serial_interval)
         most_likely, _ = plotrt.compute(cases_per_day, r0_estimate=2.5)
         log(f"Rt: {most_likely[:20]}", self.logfile)
+    '''
 
     def write_for_training(self, humans, outfile, conf):
         """ Writes some data out for the ML predictor """

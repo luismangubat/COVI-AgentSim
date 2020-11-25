@@ -581,7 +581,7 @@ INTERVENTION_DAY: -1 # intervention starts on these many days after COVID_START_
 DIRECT_INTERVENTION: 30
 
 # Console logging (Condition with COLLECT_LOGS)
-LOGGING_LEVEL: "WARNING"
+LOGGING_LEVEL: "CRITICAL"
 
 # TRACKER
 EFFECTIVE_R_WINDOW: 10 # days

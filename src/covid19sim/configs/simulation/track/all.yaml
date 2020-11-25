@@ -1,7 +1,7 @@
-track_all: True
+track_all: False
 
 # all tracking functions
-track_mixing: True
-track_mobility: True
-track_bluetooth_communications: True
-track_humans: True
+track_mixing: False
+track_mobility: False
+track_bluetooth_communications: False
+track_humans: False
