@@ -48,7 +48,7 @@ def convert_intervention_to_behavior_level(intervention_level):
 
 class Quarantine(object):
     """
-    Contains logic to handle different combinations of non-app quarantine triggers.
+    Contains logic to handle different combinations of non-app.
 
     Args:
         human (covid19sim.human.Human): `human` whose behavior needs to be changed

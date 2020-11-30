@@ -934,51 +934,51 @@ class Human(BaseHuman):
         Yields:
             simpy.events.Event:
         """
-        #previous_activity, next_activity = None, self.mobility_planner.get_next_activity()
+        previous_activity, next_activity = None, self.mobility_planner.get_next_activity()
         while True:
-            yield self.env.timeout(8640)   # Every 1/10 of a day (in seconds) do something
+            #yield self.env.timeout(8640)   # Every 1/10 of a day (in seconds) do something
             self.city.total_events += 1
+
+            if next_activity.human_dies:
+                yield self.env.process(self.expire())
+
             #
-            # if next_activity.human_dies:
-            #     yield self.env.process(self.expire())
-            #
-            # #
-            # if next_activity.location is not None:
-            #
-            #     # (debug) to print the schedule for someone
-            #     # if self.name == "human:77":
-            #     #       print("A\t", self.env.timestamp, self, next_activity)
-            #
-            #     # /!\ TODO - P - check for the capacity at a location; it requires adjustment of timestamps
-            #     # with next_activity.location.request() as request:
-            #     #     yield request
-            #     #     yield self.env.process(self.transition_to(next_activity, previous_activity))
-            #
-            #     assert abs(self.env.timestamp - next_activity.start_time).seconds == 0, f"start times do not align...\n{self}\n{self.intervened_behavior.quarantine_timestamp}\n{self.intervened_behavior.quarantine_reason}\ncurrent timestamp:{self.env.timestamp}\nnext_activity:{next_activity}"
-            #     yield self.env.process(self.transition_to(next_activity, previous_activity))
-            #     assert abs(self.env.timestamp - next_activity.end_time).seconds == 0, f"end times do not align...\n{self}\n{self.intervened_behavior.quarantine_timestamp}\n{self.intervened_behavior.quarantine_reason}\ncurrent timestamp:{self.env.timestamp}\nnext_activity:{next_activity}"
-            #
-            #     previous_activity, next_activity = next_activity, self.mobility_planner.get_next_activity()
-            #
-            # else:
-            #     # supervised or invitation type of activities (prepend_name) will require to refresh their location
-            #     # because this activity depends on parent_activity, we need to give a full 1 second to guarantee
-            #     # that parent activity will have its location confirmed. This creates a discrepancy in env.timestamp and
-            #     # next_activity.start_time.
-            #     next_activity.refresh_location()
-            #
-            #     # (debug) to print the schedule for someone
-            #     # if self.name == "human:110":
-            #     #       print("A\t", self.env.timestamp, self, next_activity)
-            #
-            #     yield self.env.timeout(1)
-            #
-            #     # realign the activities and keep the previous_activity as it is if this next_activity can't be scheduled
-            #     next_activity.adjust_time(seconds=1, start=True)
-            #     if next_activity.duration <= 0:
-            #         next_activity = self.mobility_planner.get_next_activity()
-            #         continue
-            #     previous_activity.adjust_time(seconds=1, start=False)
+            if next_activity.location is not None:
+
+                # (debug) to print the schedule for someone
+                # if self.name == "human:77":
+                #       print("A\t", self.env.timestamp, self, next_activity)
+
+                # /!\ TODO - P - check for the capacity at a location; it requires adjustment of timestamps
+                # with next_activity.location.request() as request:
+                #     yield request
+                #     yield self.env.process(self.transition_to(next_activity, previous_activity))
+
+                assert abs(self.env.timestamp - next_activity.start_time).seconds == 0, f"start times do not align...\n{self}\n{self.intervened_behavior.quarantine_timestamp}\n{self.intervened_behavior.quarantine_reason}\ncurrent timestamp:{self.env.timestamp}\nnext_activity:{next_activity}"
+                yield self.env.process(self.transition_to(next_activity, previous_activity))
+                assert abs(self.env.timestamp - next_activity.end_time).seconds == 0, f"end times do not align...\n{self}\n{self.intervened_behavior.quarantine_timestamp}\n{self.intervened_behavior.quarantine_reason}\ncurrent timestamp:{self.env.timestamp}\nnext_activity:{next_activity}"
+
+                previous_activity, next_activity = next_activity, self.mobility_planner.get_next_activity()
+
+            else:
+                # supervised or invitation type of activities (prepend_name) will require to refresh their location
+                # because this activity depends on parent_activity, we need to give a full 1 second to guarantee
+                # that parent activity will have its location confirmed. This creates a discrepancy in env.timestamp and
+                # next_activity.start_time.
+                next_activity.refresh_location()
+
+                # (debug) to print the schedule for someone
+                # if self.name == "human:110":
+                #       print("A\t", self.env.timestamp, self, next_activity)
+
+                yield self.env.timeout(1)
+
+                # realign the activities and keep the previous_activity as it is if this next_activity can't be scheduled
+                next_activity.adjust_time(seconds=1, start=True)
+                if next_activity.duration <= 0:
+                    next_activity = self.mobility_planner.get_next_activity()
+                    continue
+                previous_activity.adjust_time(seconds=1, start=False)
 
     def increment_healthy_day(self):
         if not self.state[2]: # not infectious

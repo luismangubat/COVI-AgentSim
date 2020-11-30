@@ -8,6 +8,8 @@ import copy
 import datetime
 import itertools
 import math
+import mlflow
+import statistics
 import time
 import typing
 from collections import defaultdict, Counter
@@ -63,6 +65,9 @@ class City:
             conf (dict): yaml configuration of the experiment
             logfile (str): filepath where the console output and final tracked metrics will be logged. Prints to the console only if None.
         """
+        self.city_events = 0
+        self.n_people_by_location = {}
+
         self.conf = conf
         self.logfile = logfile
         self.env = env
@@ -463,43 +468,42 @@ class City:
         """
         humans_notified, infections_seeded = False, False
         last_day_idx = 0
-        yield self.env.timeout(1)  # Let's not do anything too complicated at the moment
-        #while True:
-            # current_day = (self.env.timestamp - self.start_time).days
-            #
-            # # seed infections and change mixing constants (end of burn-in period)
-            # if (
-            #     not infections_seeded
-            #     and self.env.timestamp == self.conf['COVID_SPREAD_START_TIME']
-            # ):
-            #     self._initiate_infection_spread_and_modify_mixing_if_needed()
-            #     infections_seeded = True
-            #
-            # # Notify humans to follow interventions on intervention day
-            # if (
-            #     not humans_notified
-            #     and self.env.timestamp == self.conf.get('INTERVENTION_START_TIME')
-            # ):
+        while True:
+            current_day = (self.env.timestamp - self.start_time).days
+
+            # seed infections and change mixing constants (end of burn-in period)
+            if (
+                not infections_seeded
+                and self.env.timestamp == self.conf['COVID_SPREAD_START_TIME']
+            ):
+                self._initiate_infection_spread_and_modify_mixing_if_needed()
+                infections_seeded = True
+
+            # Notify humans to follow interventions on intervention day
+            if (
+                not humans_notified
+                and self.env.timestamp == self.conf.get('INTERVENTION_START_TIME')
+            ):
             #     log("\n *** ****** *** ****** *** INITIATING INTERVENTION *** *** ****** *** ******\n", self.logfile)
             #     log(self.conf['INTERVENTION'], self.logfile)
-            #
+
             #     # if its a tracing method, load the class that can compute risk
             #     if self.conf['RISK_MODEL'] != "":
             #         self.tracing_method = get_tracing_method(risk_model=self.conf['RISK_MODEL'], conf=self.conf)
             #         self.have_some_humans_download_the_app()
-            #
+
             #     # initialize everyone from the baseline behavior
-            #     for human in self.humans:
-            #         human.intervened_behavior.initialize()
+                for human in self.humans:
+                    human.intervened_behavior.initialize()
             #         if self.tracing_method is not None:
             #             human.set_tracing_method(self.tracing_method)
-            #
+
             #     # log reduction levels
             #     log("\nCONTACT REDUCTION LEVELS (first one is not used) -", self.logfile)
             #     for location_type, value in human.intervened_behavior.reduction_levels.items():
             #         log(f"{location_type}: {value} ", self.logfile)
             #
-            #     humans_notified = True
+                humans_notified = True
             #     if self.tracing_method is not None:
             #         self.tracker.track_daily_recommendation_levels(set_tracing_started_true=True)
             #
@@ -516,17 +520,17 @@ class City:
             # # TODO: testing budget is used up at hour 0 if its small
             # self.covid_testing_facility.clear_test_queue()
             #
-            # alive_humans = []
+            alive_humans = []
             #
-            # # run non-app-related-stuff for all humans here (test seeking, infectiousness updates)
-            # for human in self.humans:
-            #     if not human.is_dead:
-            #         human.check_if_needs_covid_test()  # humans can decide to get tested whenever
-            #         human.check_covid_symptom_start()
-            #         human.check_covid_recovery()
-            #         human.fill_infectiousness_history_map(current_day)
-            #         alive_humans.append(human)
-            #
+            # run non-app-related-stuff for all humans here (test seeking, infectiousness updates)
+            for human in self.humans:
+                if not human.is_dead:
+                    human.check_if_needs_covid_test()  # humans can decide to get tested whenever
+                    human.check_covid_symptom_start()
+                    human.check_covid_recovery()
+                    human.fill_infectiousness_history_map(current_day)
+                    alive_humans.append(human)
+
             # # now, run app-related stuff (risk assessment, message preparation, ...)
             # prev_risk_history_maps, update_messages = self.run_app(current_day, outfile, alive_humans)
             #
@@ -543,7 +547,7 @@ class City:
             # self.tracker.track_humans(hd=self.hd, current_timestamp=self.env.timestamp)
             # # self.tracker.track_locations() # TODO
             #
-            # yield self.env.timeout(int(duration))
+            yield self.env.timeout(int(duration))
             # # finally, run end-of-day activities (if possible); these include mailbox cleanups, symptom updates, ...
             # if current_day != last_day_idx:
             #     alive_humans = [human for human in self.humans if not human.is_dead]
@@ -551,6 +555,22 @@ class City:
             #     if self.conf.get("DIRECT_INTERVENTION", -1) == current_day:
             #         self.conf['GLOBAL_MOBILITY_SCALING_FACTOR'] = self.conf['GLOBAL_MOBILITY_SCALING_FACTOR']  / 2
             #     self.do_daily_activies(current_day, alive_humans)
+            self.city_events += 1
+            for k in self.n_people_by_location.keys():
+                self.n_people_by_location[k] = 0
+            for h in self.humans:
+                k = h.location.name
+                self.n_people_by_location[k] = self.n_people_by_location.get(k, 0) + 1
+            for k, v in self.n_people_by_location.items():
+                label = k
+                label = label.replace(":","-")
+                label = label.replace("(",".")
+                label = label.replace(")",".")
+                label = label.replace(", ","-")
+                mlflow.log_metric(label, v)
+            # mean_behavior_level = statistics.mean([h.intervened_behavior.behavior_level for h in self.humans])
+            # mlflow.log_metric("mean_behavior_level", mean_behavior_level)
+            mlflow.log_metric("length_test_queue", len(self.covid_testing_facility.test_queue))
 
     def do_daily_activies(
             self,

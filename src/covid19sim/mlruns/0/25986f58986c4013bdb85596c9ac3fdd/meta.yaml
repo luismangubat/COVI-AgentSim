@@ -1,0 +1,15 @@
+artifact_uri: file:///home/paredes/IdeaProjects/COVI-AgentSim/src/covid19sim/mlruns/0/25986f58986c4013bdb85596c9ac3fdd/artifacts
+end_time: 1606757013069
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+name: ''
+run_id: 25986f58986c4013bdb85596c9ac3fdd
+run_uuid: 25986f58986c4013bdb85596c9ac3fdd
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1606756719142
+status: 3
+tags: []
+user_id: paredes

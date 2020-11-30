@@ -258,15 +258,10 @@ def simulate(
     if conf is None:
         conf = {}
 
-    mlflow.log_param("n_people", n_people)
+
     conf["n_people"] = n_people
-
-    mlflow.log_param("init_infected", init_fraction_sick)
     conf["init_fraction_sick"] = init_fraction_sick
-
     conf["start_time"] = start_time
-
-    mlflow.log_param("simulation_days", simulation_days)
     conf["simulation_days"] = simulation_days
     conf["outfile"] = outfile
     conf["out_chunk_size"] = out_chunk_size
@@ -335,7 +330,11 @@ def simulate(
 
     # Run simulation until termination
     env.run(until=env.ts_initial + simulation_days * SECONDS_PER_DAY)
-    mlflow.log_metric("total_events", city.total_events)
+    mlflow.log_param("n_people", n_people)
+    mlflow.log_param("init_infected", init_fraction_sick)
+    mlflow.log_param("simulation_days", simulation_days)
+#    mlflow.log_metric("total_events", city.total_events)
+    mlflow.log_metric("city_events", city.city_events)
     return city
 
 
