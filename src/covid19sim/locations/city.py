@@ -66,7 +66,6 @@ class City:
             logfile (str): filepath where the console output and final tracked metrics will be logged. Prints to the console only if None.
         """
         self.city_events = 0
-        self.n_people_by_location = {}
 
         self.conf = conf
         self.logfile = logfile
@@ -556,21 +555,37 @@ class City:
             #         self.conf['GLOBAL_MOBILITY_SCALING_FACTOR'] = self.conf['GLOBAL_MOBILITY_SCALING_FACTOR']  / 2
             #     self.do_daily_activies(current_day, alive_humans)
             self.city_events += 1
-            for k in self.n_people_by_location.keys():
-                self.n_people_by_location[k] = 0
-            for h in self.humans:
-                k = h.location.name
-                self.n_people_by_location[k] = self.n_people_by_location.get(k, 0) + 1
-            for k, v in self.n_people_by_location.items():
-                label = k
-                label = label.replace(":","-")
-                label = label.replace("(",".")
-                label = label.replace(")",".")
-                label = label.replace(", ","-")
-                mlflow.log_metric(label, v)
+            # locations_dict = self.n_people_by_location(self.humans)
+            # self.mlflow_log_metric_locations(locations_dict)
             # mean_behavior_level = statistics.mean([h.intervened_behavior.behavior_level for h in self.humans])
             # mlflow.log_metric("mean_behavior_level", mean_behavior_level)
-            mlflow.log_metric("length_test_queue", len(self.covid_testing_facility.test_queue))
+            # mlflow.log_metric("length_test_queue", len(self.covid_testing_facility.test_queue))
+
+    def n_people_by_location(self, humans_list):
+        locations_dict = {}
+        # for k in self.n_people_by_location.keys():
+        #    self.n_people_by_location[k] = 0
+        for h in humans_list:
+            k = h.location.name
+            locations_dict[k] = locations_dict.get(k, 0) + 1
+        return locations_dict
+
+
+    def mlflow_log_metric_locations(self, locations_dict):
+        for k, v in locations_dict.items():
+            label = k
+            label = label.replace(":","-")
+            label = label.replace("(",".")
+            label = label.replace(")",".")
+            label = label.replace(", ","-")
+            mlflow.log_metric(label, v)
+
+    def mlflow_log_metric_locations_every(self, PERIOD):
+        while True:
+            yield self.env.timeout(PERIOD)
+            locations_dict = self.n_people_by_location(self.humans)
+            self.mlflow_log_metric_locations(locations_dict)
+
 
     def do_daily_activies(
             self,

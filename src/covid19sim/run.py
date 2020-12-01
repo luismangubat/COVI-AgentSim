@@ -327,14 +327,14 @@ def simulate(
 
     # Turn logging off for now
     #env.process(console_logger.run(env, city=city))
-
+    env.process(city.mlflow_log_metric_locations_every(60))
     # Run simulation until termination
     env.run(until=env.ts_initial + simulation_days * SECONDS_PER_DAY)
     mlflow.log_param("n_people", n_people)
     mlflow.log_param("init_infected", init_fraction_sick)
     mlflow.log_param("simulation_days", simulation_days)
-#    mlflow.log_metric("total_events", city.total_events)
-    mlflow.log_metric("city_events", city.city_events)
+    # mlflow.log_metric("total_events", city.total_events)
+    # mlflow.log_metric("city_events", city.city_events)
     return city
 
 
