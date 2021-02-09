@@ -22,6 +22,8 @@ from covid19sim.log.console_logger import ConsoleLogger
 from covid19sim.inference.server_utils import DataCollectionServer
 from covid19sim.utils.utils import dump_conf, dump_tracker_data, extract_tracker_data, parse_configuration, log
 
+import mlflow
+
 def _get_intervention_string(conf):
     """
     Consolidates all the parameters to one single string.
@@ -323,6 +325,15 @@ def simulate(
         env.process(human.run())
 
     env.process(console_logger.run(env, city=city))
+
+    # Logs parameters for replication of model validation described in Gupta et al Arxiv-2020
+    mlflow.log_param("global_mobility_scaling_factor", conf['GLOBAL_MOBILITY_SCALING_FACTOR'])
+    mlflow.log_param("init_fraction_sic", init_fraction_sick)
+    mlflow.log_param("n_people", n_people)
+    mlflow.log_param("n_behavior_levels", n_behavior_levels)
+    mlflow.log_param("region", region)
+    mlflow.log_param("seed", seed)
+    mlflow.log_param("simulation_days", simulation_days)
 
     # Run simulation until termination
     env.run(until=env.ts_initial + simulation_days * SECONDS_PER_DAY)
