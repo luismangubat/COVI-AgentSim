@@ -7,6 +7,7 @@ region: montreal
 n_people: 3000
 simulation_days: 60
 init_fraction_sick: 0.002
+N_BEHAVIOR_LEVELS: 4
 intervention: no_intervention
 tune: true
 

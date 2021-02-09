@@ -701,6 +701,7 @@ class Tracker(object):
 
         self.cases_per_day.append(0)
 
+        # Logs metrics needed to replicate model validation described in Gupta, et al. Arxiv-2020
         mlflow.log_metric("s_per_day", self.s_per_day[-1])
         mlflow.log_metric("e_per_day", self.e_per_day[-1])
         mlflow.log_metric("i_per_day", self.i_per_day[-1])
