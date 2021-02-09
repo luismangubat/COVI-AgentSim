@@ -330,8 +330,8 @@ def simulate(
     mlflow.log_param("global_mobility_scaling_factor", conf['GLOBAL_MOBILITY_SCALING_FACTOR'])
     mlflow.log_param("init_fraction_sic", init_fraction_sick)
     mlflow.log_param("n_people", n_people)
-    mlflow.log_param("n_behavior_levels", n_behavior_levels)
-    mlflow.log_param("region", region)
+    mlflow.log_param("n_behavior_levels", conf['N_BEHAVIOR_LEVELS'])
+    mlflow.log_param("region", conf['REGION'])
     mlflow.log_param("seed", seed)
     mlflow.log_param("simulation_days", simulation_days)
 
