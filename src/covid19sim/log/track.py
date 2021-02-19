@@ -29,6 +29,7 @@ if typing.TYPE_CHECKING:
     from covid19sim.human import Human
 from covid19sim.locations.hospital import Hospital, ICU
 
+import mlflow
 
 # used by - next_generation_matrix,
 SNAPSHOT_PERCENT_INFECTED_THRESHOLD = 2 # take a snapshot every time percent infected of population increases by this amount
@@ -699,6 +700,12 @@ class Tracker(object):
             self.cumulative_incidence.append(0)
 
         self.cases_per_day.append(0)
+
+        # Logs metrics needed to replicate model validation described in Gupta, et al. Arxiv-2020
+        mlflow.log_metric("s_per_day", self.s_per_day[-1])
+        mlflow.log_metric("e_per_day", self.e_per_day[-1])
+        mlflow.log_metric("i_per_day", self.i_per_day[-1])
+        mlflow.log_metric("r_per_day", self.r_per_day[-1])
 
         self.s_per_day.append(sum(h.is_susceptible for h in self.city.humans))
         self.e_per_day.append(sum(h.is_exposed for h in self.city.humans))

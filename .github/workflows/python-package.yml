@@ -1,0 +1,45 @@
+# This workflow will install Python dependencies, run tests and lint with a variety of Python versions
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
+
+name: Python package
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.7, 3.8]
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install flake8 pytest
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+    - name: Install package
+      run: python -m pip install -e . 
+    - name: Test with pytest
+      run: >
+        pytest tests/ 
+        --ignore tests/test_async_inference.py 
+        --ignore tests/test_covid_testing.py 
+        --ignore tests/test_demographics.py 
+        --ignore tests/test_epi_parameters.py 
+        --ignore tests/test_functional_seniors_residence.py 
+        --ignore tests/test_heuristic.py 
+        --ignore tests/test_models.py 
+        --ignore tests/test_reproducibility.py 
+        --ignore tests/test_should_send_message_gaen.py 
+        --ignore tests/test_tracker.py
