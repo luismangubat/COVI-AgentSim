@@ -333,6 +333,7 @@ def simulate(
     mlflow.log_param("n_behavior_levels", conf['N_BEHAVIOR_LEVELS'])
     mlflow.log_param("region", conf['REGION'])
     mlflow.log_param("seed", seed)
+    mlflow.log_param("simulation_days", simulation_days)
 
     # Run simulation until termination
     env.run(until=env.ts_initial + simulation_days * SECONDS_PER_DAY)
