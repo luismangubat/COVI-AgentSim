@@ -63,6 +63,7 @@ class City:
             conf (dict): yaml configuration of the experiment
             logfile (str): filepath where the console output and final tracked metrics will be logged. Prints to the console only if None.
         """
+        self.schools = []
         self.conf = conf
         self.logfile = logfile
         self.env = env

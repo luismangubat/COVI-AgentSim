@@ -478,7 +478,7 @@ def _build_and_allocate_schools(humans, city, conf, rng):
 
     n_schools = 0
 
-    # 2-4 yo (daycares)
+    # 2-4 yo (daycares)  # How to model just one of these schools?
     schools_for_2_4 = _build_schools_and_enroll_students(city, conf, kids_2_4, n_schools_2_4, "(2-4)", area[:n_schools_2_4], rng, N_STUDENTS_PER_SCHOOL_2_4)
     n_schools += n_schools_2_4
 
@@ -495,7 +495,7 @@ def _build_and_allocate_schools(humans, city, conf, rng):
     n_schools += n_schools_12_17
 
     # 17-29
-    rng.shuffle(kids_17_29)
+    rng.shuffle(kids_17_29)  # A university?
     schools_for_17_29 = []
     for i in range(n_schools_17_29):
         area_idx += 1

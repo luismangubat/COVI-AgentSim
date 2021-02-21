@@ -22,6 +22,8 @@ from covid19sim.log.console_logger import ConsoleLogger
 from covid19sim.inference.server_utils import DataCollectionServer
 from covid19sim.utils.utils import dump_conf, dump_tracker_data, extract_tracker_data, parse_configuration, log
 
+import mlflow
+
 def _get_intervention_string(conf):
     """
     Consolidates all the parameters to one single string.
@@ -316,13 +318,19 @@ def simulate(
             DummyMemManager.global_cluster_map = {}
 
     # Initiate city process, which runs every hour
-    env.process(city.run(SECONDS_PER_HOUR, outfile))
+    env.process(city.run(SECONDS_PER_HOUR, outfile))  # How can I limit events to a single location?
 
     # initiate humans
     for human in city.humans:
-        env.process(human.run())
+        env.process(human.run())  # How can I limit events to a single location?
 
     env.process(console_logger.run(env, city=city))
+
+    # Logs parameters basic parameters
+    mlflow.log_param("n_people", n_people)
+   # mlflow.log_param("region", conf['REGION'])
+    mlflow.log_param("seed", seed)
+    mlflow.log_param("simulation_days", simulation_days)
 
     # Run simulation until termination
     env.run(until=env.ts_initial + simulation_days * SECONDS_PER_DAY)
