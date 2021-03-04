@@ -10,27 +10,29 @@
 
 # https://www12.statcan.gc.ca/census-recensement/2016/dp-pd/prof/details/page.cfm?Lang=E&Geo1=CSD&Code1=3510010&Geo2=PR&Code2=01&SearchText=Kingston&SearchType=Contains&SearchPR=01&B1=All&TABID=1&type=1
 # population of Montreal - 123798 (a.1)
-POPULATION_SIZE_REGION: 123798
+
+POPULATION_SIZE_REGION: 193363
+
 P_AGE_REGION: [
     [0, 4, 0.047],
     [5, 9, 0.051],
-    [10, 14, 0.048],
+    [10, 14, 0.05],
     [15, 19, 0.055],
-    [20, 24, 0.077],
-    [25, 29, 0.074],
-    [30, 34, 0.067],
-    [35, 39, 0.060],
-    [40, 44, 0.055],
-    [45, 49, 0.062],
-    [50, 54, 0.075],
-    [55, 59, 0.071],
-    [60, 64, 0.064],
-    [65, 69, 0.059],
-    [70, 74, 0.045],
-    [75, 110, 0.090]
+    [20, 24, 0.066],
+    [25, 29, 0.063],
+    [30, 34, 0.061],
+    [35, 39, 0.057],
+    [40, 44, 0.056],
+    [45, 49, 0.064],
+    [50, 54, 0.079],
+    [55, 59, 0.078],
+    [60, 64, 0.072],
+    [65, 69, 0.066],
+    [70, 74, 0.049],
+    [75, 110, 0.086]
 ]
-AVERAGE_AGE_REGION: 40.6
-MEDIAN_AGE_REGION: 39.1
+AVERAGE_AGE_REGION: 43.1
+MEDIAN_AGE_REGION: 44.5
 
 # https://www12.statcan.gc.ca/census-recensement/2016/dp-pd/prof/details/page.cfm?Lang=E&Geo1=HR&Code1=2406&Geo2=PR&Code2=01&SearchText=montreal&SearchType=Contains&SearchPR=01&B1=Families,%20households%20and%20marital%20status&TABID=1&type=0
 # Household and Dwelling characteristic
@@ -40,13 +42,12 @@ MEDIAN_AGE_REGION: 39.1
 # fraction of **all** households that are 3 persons households 0.136 (A.3)
 # fraction of **all** households that are 4 persons households 0.112 (A.4)
 # fraction of **all** households that are more than 5 persons households 0.06 (A.5)
-# average household size 2.2
-AVG_HOUSEHOLD_SIZE: 2.2
-P_HOUSEHOLD_SIZE:  [0.394, 0.298, 0.136, 0.112, 0.06]
+AVG_HOUSEHOLD_SIZE: 2.3
+P_HOUSEHOLD_SIZE:  [0.286, 0.385, 0.148, 0.122, 0.060]
 
 # Total number of 1 person private households in Montreal - 342,510
 # ref: https://www12.statcan.gc.ca/census-recensement/2016/dp-pd/prof/details/page.cfm?Lang=E&Geo1=HR&Code1=2406&Geo2=PR&Code2=01&SearchText=montreal&SearchType=Contains&SearchPR=01&B1=All&TABID=1&type=0
-N_HOUSESIZE_1: 342510
+N_HOUSESIZE_1: 23240
 
 # Household type (B)
 # total private households - 870,375 (B.1)
@@ -63,7 +64,7 @@ N_HOUSESIZE_1: 342510
 #       fraction of **all** households that are "couples without children" = (C.2.1 / C.1) * (B.2 / B.1) = 0.198
 #       single parent with a child - 63,315 (C.2.2)
 #       fraction of **all** households that are "single parent with a child" - (C.2.2 / C.1) * (B.2 / B.1) = 0.070
-P_FAMILY_TYPE_SIZE_2: [0.198, 0.070, 0.03]
+P_FAMILY_TYPE_SIZE_2: [0.308, 0.065, 0.012]
 
 # 3 person families
 #   3 person families in private households - 109,085 (C.3)
@@ -73,7 +74,7 @@ P_FAMILY_TYPE_SIZE_2: [0.198, 0.070, 0.03]
 #       fraction of **all** households that are "couples with 1 child" = (C.3.1 / C.1) * (B.2 / B.1) = 0.091
 #       single parent with 2 children - 26,780 (C.3.2)
 #       fraction of **all** households that are "single parent with 2 children" = (C.3.2 / C.1) * (B.2 / B.1) = 0.03
-P_FAMILY_TYPE_SIZE_3: [0.091, 0.03, 0.015]
+P_FAMILY_TYPE_SIZE_3: [0.102, 0.029, 0.017]
 
 # 4 person families
 #   4 person families in private households - 93,225 (C.4)
@@ -84,7 +85,7 @@ P_FAMILY_TYPE_SIZE_3: [0.091, 0.03, 0.015]
 #       single parent with 3 or more children - 9,610 (C.4.2)
 #       single parent with 3 children - 9,610 (C.4 - C.4.1) = 7240 (C.4.3)
 #       fraction of **all** households that are "single parent with 3 children" = (C.4.3 / C.1) * (B.2 / B.1) = 0.008
-P_FAMILY_TYPE_SIZE_4: [0.096, 0.008, 0.008]
+P_FAMILY_TYPE_SIZE_4: [0.102, 0.015, 0.005]
 
 # 5 or more person families
 #   5 person families in private households - 41,555 (C.5)
@@ -94,7 +95,7 @@ P_FAMILY_TYPE_SIZE_4: [0.096, 0.008, 0.008]
 #      fraction of **all** households that are "couples with 3 or more children" = (C.5.1 / C.1) * (B.2 / B.1) = 0.044
 #      single parent with 4 or more children - (C.4.2 - C.4.3) = 2370 (C.5.2)
 #      fraction of **all** households that are "single parent with 4 or more children" = (C.5.2 / C.1) * (B.2 / B.1) = 0.003
-P_FAMILY_TYPE_SIZE_MORE_THAN_5: [0.044, 0.003, 0.013]
+P_FAMILY_TYPE_SIZE_MORE_THAN_5: [0.039, 0.0, 0.021]
 
 # multi-generation households (D)
 # https://www12.statcan.gc.ca/census-recensement/2016/dp-pd/hlt-fst/fam/Table.cfm?Lang=E&T=24&Geo=00&SO=18D
