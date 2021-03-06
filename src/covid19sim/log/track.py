@@ -29,8 +29,6 @@ if typing.TYPE_CHECKING:
     from covid19sim.human import Human
 from covid19sim.locations.hospital import Hospital, ICU
 
-import mlflow
-
 # used by - next_generation_matrix,
 SNAPSHOT_PERCENT_INFECTED_THRESHOLD = 2 # take a snapshot every time percent infected of population increases by this amount
 LOCATION_TYPES_TO_TRACK_MIXING = ["house", "work", "school", "other", "all"]
@@ -390,9 +388,6 @@ class Tracker(object):
             self.collection_client = DataCollectionClient(
                 server_address=city.conf.get("data_collection_server_address", default_datacollect_frontend_address),
             )
-
-        # Report on a single location
-        mlflow.log_metric('university.n_people', 0)  # Which variable to use?
 
     def initialize(self):
         self.summarize_population()
