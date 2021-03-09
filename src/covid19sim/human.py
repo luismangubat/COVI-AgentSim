@@ -1060,10 +1060,10 @@ class Human(BaseHuman):
             mlflow.log_metric('human_proba_report_age_sex', self.proba_report_age_and_sex)
 
             # Labels
-            mlflow.log_metric('human_is_susceptible', self.is_susceptible)
-            mlflow.log_metric('human_is_exposed', self.is_exposed)
-            mlflow.log_metric('human_is_infectious', self.is_infectious)
-            mlflow.log_metric('human_is_recovered', self.is_removed)
+            mlflow.log_metric('human_is_susceptible', int(self.is_susceptible))
+            mlflow.log_metric('human_is_exposed', int(self.is_exposed))
+            mlflow.log_metric('human_is_infectious', int(self.is_infectious))
+            mlflow.log_metric('human_is_recovered', int(self.is_removed))
 
         # print("before", self.env.timestamp, self, location, duration)
         location = next_activity.location
