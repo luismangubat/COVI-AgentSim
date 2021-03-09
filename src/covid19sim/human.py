@@ -1024,7 +1024,7 @@ class Human(BaseHuman):
             (simpy.events.Timeout)
         """
         # Log only a single location
-        location = 'STORE:0'  # Hopefully this location isn't None, lol
+        location = 'STORE:0'
         if (next_activity \
            and next_activity.location.name == location) \
             or (previous_activity \
@@ -1058,6 +1058,12 @@ class Human(BaseHuman):
             mlflow.log_metric('human_proba_dropout_symptoms', self.proba_dropout_symptoms)
             mlflow.log_metric('human_proba_dropin_symptoms', self.proba_dropin_symptoms)
             mlflow.log_metric('human_proba_report_age_sex', self.proba_report_age_and_sex)
+
+            # Labels
+            mlflow.log_metric('human_is_susceptible', self.is_susceptible)
+            mlflow.log_metric('human_is_exposed', self.is_exposed)
+            mlflow.log_metric('human_is_infectious', self.is_infectious)
+            mlflow.log_metric('human_is_recovered', self.is_removed)
 
         # print("before", self.env.timestamp, self, location, duration)
         location = next_activity.location
