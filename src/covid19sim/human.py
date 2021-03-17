@@ -1023,16 +1023,36 @@ class Human(BaseHuman):
         Yields:
             (simpy.events.Timeout)
         """
-        # Log only a single location
-        location = 'STORE:0'
-        if (next_activity \
-           and next_activity.location.name == location) \
-            or (previous_activity \
-                and previous_activity.location.name == location):
+        # print("before", self.env.timestamp, self, location, duration)
+        location = next_activity.location
+        duration = next_activity.duration
+        type_of_activity = next_activity.name
+
+        # track transitions & locations visited
+        self.city.tracker.track_mobility(previous_activity, next_activity, self)
+
+        # add human to the location
+        self.location = location
+        location.add_human(self)
+
+        self.location_start_time = self.env.now
+        self.location_leaving_time = self.location_start_time + duration
+
+        # (WIP) check if human needs a test if it's a hospital
+        # self.check_if_needs_covid_test(at_hospital=isinstance(location, (Hospital, ICU)))
+
+        yield self.env.timeout(duration) # Adds this process to the simulator's event queue
+        # print("after", self.env.timestamp, self, location, duration)
+
+        if self.location.name == 'STORE:0':  # Log only a single location for my experiments in decomposing
+
+            # To allow me to aggregate people by time period
+            mlflow.log_metric('location_leaving_time', int(self.location_leaving_time))
 
             # To help me filter data by location
-            mlflow.log_metric('next_activity_location_name', hash(next_activity.location.name if next_activity else "None"))  # Of course, I won't know what the locationis exactly
-            mlflow.log_metric('previous_activity_location_name', hash(previous_activity.location.name if previous_activity else "None"))
+            #mlflow.log_metric('next_activity_location_name', hash(next_activity.location.name if next_activity else "None"))  # Of course, I won't know what the locationis exactly
+            #mlflow.log_metric('previous_activity_location_name', hash(previous_activity.location.name if previous_activity else "None"))
+            mlflow.log_metric('location', hash(self.location.name))
 
             # Dump a bunch of data about the person and enivornment when this event starts
             mlflow.log_metric('human_recoved_timestamp', hash(self.recovered_timestamp))
@@ -1064,27 +1084,6 @@ class Human(BaseHuman):
             mlflow.log_metric('human_is_exposed', int(self.is_exposed))
             mlflow.log_metric('human_is_infectious', int(self.is_infectious))
             mlflow.log_metric('human_is_recovered', int(self.is_removed))
-
-        # print("before", self.env.timestamp, self, location, duration)
-        location = next_activity.location
-        duration = next_activity.duration
-        type_of_activity = next_activity.name
-
-        # track transitions & locations visited
-        self.city.tracker.track_mobility(previous_activity, next_activity, self)
-
-        # add human to the location
-        self.location = location
-        location.add_human(self)
-
-        self.location_start_time = self.env.now
-        self.location_leaving_time = self.location_start_time + duration
-
-        # (WIP) check if human needs a test if it's a hospital
-        # self.check_if_needs_covid_test(at_hospital=isinstance(location, (Hospital, ICU)))
-
-        yield self.env.timeout(duration)
-        # print("after", self.env.timestamp, self, location, duration)
 
         # only sample interactions if there is a possibility of infection or message exchanges
         if duration >= min(self.conf['MIN_MESSAGE_PASSING_DURATION'], self.conf['INFECTION_DURATION']):
