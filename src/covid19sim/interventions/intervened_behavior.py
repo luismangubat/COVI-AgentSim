@@ -79,7 +79,7 @@ class Quarantine(object):
         Args:
             trigger (str): reason for quarantine trigger.
         """
-        return  # Don't quarantine anyone ever
+        return
         if self.human_no_longer_needs_quarantining:
             return
 
@@ -211,7 +211,7 @@ class IntervenedBehavior(object):
         self.conf = conf
         self.rng = human.rng
 
-        assert conf['N_BEHAVIOR_LEVELS'] >= 2, "At least 2 behavior levels are required to model behavior changes"
+        #assert conf['N_BEHAVIOR_LEVELS'] >= 2, "At least 2 behavior levels are required to model behavior changes"
 
         # we reserve 0-index
         self.n_behavior_levels = conf['N_BEHAVIOR_LEVELS'] + 1
