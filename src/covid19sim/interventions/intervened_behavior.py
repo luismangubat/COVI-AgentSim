@@ -79,6 +79,7 @@ class Quarantine(object):
         Args:
             trigger (str): reason for quarantine trigger.
         """
+        return  # Don't quarantine anyone ever
         if self.human_no_longer_needs_quarantining:
             return
 
