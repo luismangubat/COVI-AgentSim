@@ -1044,7 +1044,8 @@ class Human(BaseHuman):
         yield self.env.timeout(duration) # Adds this process to the simulator's event queue
         # print("after", self.env.timestamp, self, location, duration)
 
-        if self.location.name == 'STORE:0':  # Log only a single location for my experiments in decomposing
+        if self.location.location_type != 'HOUSEHOLD':  # Where is everyone?
+        #if self.location.name == 'STORE:0':  # Log only a single location for my experiments in decomposing
 
             # To allow me to aggregate people by time period
             mlflow.log_metric('location_leaving_time', int(self.location_leaving_time))
@@ -1055,29 +1056,29 @@ class Human(BaseHuman):
             mlflow.log_metric('location', hash(self.location.name))
 
             # Dump a bunch of data about the person and enivornment when this event starts
-            mlflow.log_metric('human_recoved_timestamp', hash(self.recovered_timestamp))
-            mlflow.log_metric('human__infection_timestamp', hash(self._infection_timestamp))
-            mlflow.log_metric('human_infection_timestamp', hash(self.infection_timestamp))
-            mlflow.log_metric('human_n_infections_contacts', self.n_infectious_contacts)
-            mlflow.log_metric('human_exposure_source', hash(self.exposure_source))
-            mlflow.log_metric('human_name', hash(self.name))
+            #mlflow.log_metric('human_recoved_timestamp', hash(self.recovered_timestamp))
+            #mlflow.log_metric('human__infection_timestamp', hash(self._infection_timestamp))
+            #mlflow.log_metric('human_infection_timestamp', hash(self.infection_timestamp))
+            #mlflow.log_metric('human_n_infections_contacts', self.n_infectious_contacts)
+            #mlflow.log_metric('human_exposure_source', hash(self.exposure_source))
+            #mlflow.log_metric('human_name', hash(self.name))
             #mlflow.log_metrics('human_known_conections', self.known_connections)
-            mlflow.log_metric('human_does_not_work', int(self.does_not_work))
-            mlflow.log_metric('human_work_start_time', hash(self.work_start_time))
-            mlflow.log_metric('human_workplace', hash(self.workplace.name if self.workplace else "None"))
-            mlflow.log_metric('human_location', hash(self.location.name if self.location else "None"))
-            mlflow.log_metric('human_sex', hash(self.sex))
-            mlflow.log_metric('human_age', self.age)
-            mlflow.log_metric('human_age_bin_width_10', hash(self.age_bin_width_10))
-            mlflow.log_metric('human_normalized_susceptibility', self.normalized_susceptibility)
-            mlflow.log_metric('human_mean_daily_interaction_age_group', self.mean_daily_interaction_age_group)
-            mlflow.log_metric('human_age_bin_width_5', hash(self.age_bin_width_5))
+            #mlflow.log_metric('human_does_not_work', int(self.does_not_work))
+            #mlflow.log_metric('human_work_start_time', hash(self.work_start_time))
+            #mlflow.log_metric('human_workplace', hash(self.workplace.name if self.workplace else "None"))
+            #mlflow.log_metric('human_location', hash(self.location.name if self.location else "None"))
+            #mlflow.log_metric('human_sex', hash(self.sex))
+            #mlflow.log_metric('human_age', self.age)
+            #mlflow.log_metric('human_age_bin_width_10', hash(self.age_bin_width_10))
+            #mlflow.log_metric('human_normalized_susceptibility', self.normalized_susceptibility)
+            #mlflow.log_metric('human_mean_daily_interaction_age_group', self.mean_daily_interaction_age_group)
+            #mlflow.log_metric('human_age_bin_width_5', hash(self.age_bin_width_5))
             #mlflow.log_metric('human_preexisting_conditions', hash(self.preexisting_conditions))
-            mlflow.log_metric('human_inflamitory_disease_level', self.inflammatory_disease_level)
-            mlflow.log_metric('human_carefulness', self.carefulness)
-            mlflow.log_metric('human_proba_dropout_symptoms', self.proba_dropout_symptoms)
-            mlflow.log_metric('human_proba_dropin_symptoms', self.proba_dropin_symptoms)
-            mlflow.log_metric('human_proba_report_age_sex', self.proba_report_age_and_sex)
+            #mlflow.log_metric('human_inflamitory_disease_level', self.inflammatory_disease_level)
+            #mlflow.log_metric('human_carefulness', self.carefulness)
+            #mlflow.log_metric('human_proba_dropout_symptoms', self.proba_dropout_symptoms)
+            #mlflow.log_metric('human_proba_dropin_symptoms', self.proba_dropin_symptoms)
+            #mlflow.log_metric('human_proba_report_age_sex', self.proba_report_age_and_sex)
 
             # Labels
             mlflow.log_metric('human_is_susceptible', int(self.is_susceptible))
