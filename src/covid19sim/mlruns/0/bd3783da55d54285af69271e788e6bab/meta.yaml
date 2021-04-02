@@ -1,0 +1,15 @@
+artifact_uri: ./mlruns/0/bd3783da55d54285af69271e788e6bab/artifacts
+end_time: 1617402696050
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+name: ''
+run_id: bd3783da55d54285af69271e788e6bab
+run_uuid: bd3783da55d54285af69271e788e6bab
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1617401440182
+status: 3
+tags: []
+user_id: paredes
