@@ -331,10 +331,6 @@ def simulate(
    # mlflow.log_param("region", conf['REGION'])
     mlflow.log_param("seed", seed)
     mlflow.log_param("simulation_days", simulation_days)
-    mlflow.log_param('QUARANTINE_SELF_REPORTED_INDIVIDUALS', conf['QUARANTINE_SELF_REPORTED_INDIVIDUALS'])
-    mlflow.log_param('QUARANTINE_HOUSEHOLD_UPON_INDIVIDUAL_TEST_TAKEN', conf['QUARANTINE_HOUSEHOLD_UPON_INDIVIDUAL_TEST_TAKEN'])
-    mlflow.log_param('QUARANTINE_HOUSEHOLD_UPON_INDIVIDUAL_POSITIVE_TEST', conf['QUARANTINE_HOUSEHOLD_UPON_INDIVIDUAL_POSITIVE_TEST'])
-    mlflow.log_param('QUARANTINE_HOUSEHOLD_UPON_SELF_REPORTED_INDIVIDUAL', conf['QUARANTINE_HOUSEHOLD_UPON_SELF_REPORTED_INDIVIDUAL'])
 
 # Run simulation until termination
     env.run(until=env.ts_initial + simulation_days * SECONDS_PER_DAY)
