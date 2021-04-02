@@ -1062,7 +1062,7 @@ class Human(BaseHuman):
             mlflow.log_metric('human_n_infections_contacts', self.n_infectious_contacts)
             mlflow.log_metric('human_exposure_source', hash(self.exposure_source))
             mlflow.log_metric('human_name', hash(self.name))
-            mlflow.log_metrics('human_known_conections', self.known_connections)
+
             mlflow.log_metric('human_does_not_work', int(self.does_not_work))
             mlflow.log_metric('human_work_start_time', hash(self.work_start_time))
             mlflow.log_metric('human_workplace', hash(self.workplace.name if self.workplace else "None"))
@@ -1072,7 +1072,7 @@ class Human(BaseHuman):
             mlflow.log_metric('human_normalized_susceptibility', self.normalized_susceptibility)
             mlflow.log_metric('human_mean_daily_interaction_age_group', self.mean_daily_interaction_age_group)
             mlflow.log_metric('human_age_bin_width_5', hash(self.age_bin_width_5))
-            mlflow.log_metric('human_preexisting_conditions', hash(self.preexisting_conditions))
+
             mlflow.log_metric('human_inflamitory_disease_level', self.inflammatory_disease_level)
             mlflow.log_metric('human_carefulness', self.carefulness)
             mlflow.log_metric('human_proba_dropout_symptoms', self.proba_dropout_symptoms)
