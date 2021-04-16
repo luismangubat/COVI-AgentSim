@@ -95,6 +95,7 @@ sphinxcontrib-htmlhelp==1.0.3
 sphinxcontrib-jsmath==1.0.1
 sphinxcontrib-qthelp==1.0.3
 sphinxcontrib-serializinghtml==1.1.4
+store0 @ git+git://github.com/alisonparedes/store0.git
 subprocess32==3.5.4
 tinycss2==1.1.0
 toml==0.10.2
