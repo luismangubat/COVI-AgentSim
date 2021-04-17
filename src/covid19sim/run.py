@@ -318,11 +318,14 @@ def simulate(
             DummyMemManager.global_cluster_map = {}
 
     # Initiate city process, which runs every hour
-    env.process(city.run(SECONDS_PER_HOUR, outfile))  # How can I limit events to a single location?
+    env.process(city.run(SECONDS_PER_HOUR, outfile))
+
+    # Initialize local-level model
+    env.process(city.store0.pulse())
 
     # initiate humans
     for human in city.humans:
-        env.process(human.run())  # How can I limit events to a single location?
+        env.process(human.run())
 
     env.process(console_logger.run(env, city=city))
 

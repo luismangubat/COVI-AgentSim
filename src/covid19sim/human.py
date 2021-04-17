@@ -55,7 +55,7 @@ class Human(BaseHuman):
         conf (dict): yaml configuration of the experiment
     """
 
-    def __init__(self, env, city, name, age, rng, conf):
+    def __init__(self, env, city, name, age, rng, conf=None):
         super().__init__(env)
 
         # Utility References
@@ -211,6 +211,9 @@ class Human(BaseHuman):
 
         self.location_leaving_time = self.env.ts_initial + SECONDS_PER_HOUR
         self.location_start_time = self.env.ts_initial
+
+    def set_is_infectious(self):
+        self.is_infectious = True
 
     def assign_household(self, location):
         if location is not None:
@@ -1044,58 +1047,22 @@ class Human(BaseHuman):
         yield self.env.timeout(duration) # Adds this process to the simulator's event queue
         # print("after", self.env.timestamp, self, location, duration)
 
-        #if self.location.location_type != 'HOUSEHOLD':  # Where is everyone?
-        if self.location.name == 'STORE:0':  # Log only a single location for my experiments in decomposing
+        if self.location.name == 'STORE:0':  # Instead of model these interactions explicitly, use a pretrained neural network
+            self.city.store0.add(self)  # Register this person with the local-level model
 
-            # To allow me to aggregate people by time period
-            mlflow.log_metric('location_leaving_time', int(self.location_leaving_time))
+        if self.location.name != 'STORE:0':  # Skip simulating state changes for these people
 
-            # To help me filter data by location
-            #mlflow.log_metric('next_activity_location_name', hash(next_activity.location.name if next_activity else "None"))  # Of course, I won't know what the locationis exactly
-            #mlflow.log_metric('previous_activity_location_name', hash(previous_activity.location.name if previous_activity else "None"))
-            mlflow.log_metric('location', hash(self.location.name))
+            # only sample interactions if there is a possibility of infection or message exchanges
+            if duration >= min(self.conf['MIN_MESSAGE_PASSING_DURATION'], self.conf['INFECTION_DURATION']):
+                # sample interactions with other humans at this location
+                # unknown are the ones that self is not aware of e.g. person sitting next to self in a cafe
+                # sleep is an inactive stage so we sample only unknown interactions
+                known_interactions, unknown_interactions = location.sample_interactions(self, unknown_only = type_of_activity == "sleep")
+                self.interact_with(known_interactions, type="known")
+                self.interact_with(unknown_interactions, type="unknown")
 
-            # Dump a bunch of data about the person and enivornment when this event starts
-            mlflow.log_metric('human_recoved_timestamp', hash(self.recovered_timestamp))
-            mlflow.log_metric('human__infection_timestamp', hash(self._infection_timestamp))
-            mlflow.log_metric('human_infection_timestamp', hash(self.infection_timestamp))
-            mlflow.log_metric('human_n_infections_contacts', self.n_infectious_contacts)
-            mlflow.log_metric('human_exposure_source', hash(self.exposure_source))
-            mlflow.log_metric('human_name', hash(self.name))
-
-            mlflow.log_metric('human_does_not_work', int(self.does_not_work))
-            mlflow.log_metric('human_work_start_time', hash(self.work_start_time))
-            mlflow.log_metric('human_workplace', hash(self.workplace.name if self.workplace else "None"))
-            mlflow.log_metric('human_sex', hash(self.sex))
-            mlflow.log_metric('human_age', self.age)
-            mlflow.log_metric('human_age_bin_width_10', hash(self.age_bin_width_10))
-            mlflow.log_metric('human_normalized_susceptibility', self.normalized_susceptibility)
-            mlflow.log_metric('human_mean_daily_interaction_age_group', self.mean_daily_interaction_age_group)
-            mlflow.log_metric('human_age_bin_width_5', hash(self.age_bin_width_5))
-
-            mlflow.log_metric('human_inflamitory_disease_level', self.inflammatory_disease_level)
-            mlflow.log_metric('human_carefulness', self.carefulness)
-            mlflow.log_metric('human_proba_dropout_symptoms', self.proba_dropout_symptoms)
-            mlflow.log_metric('human_proba_dropin_symptoms', self.proba_dropin_symptoms)
-            mlflow.log_metric('human_proba_report_age_sex', self.proba_report_age_and_sex)
-
-            # Labels
-            mlflow.log_metric('human_is_susceptible', int(self.is_susceptible))
-            mlflow.log_metric('human_is_exposed', int(self.is_exposed))
-            mlflow.log_metric('human_is_infectious', int(self.is_infectious))
-            mlflow.log_metric('human_is_recovered', int(self.is_removed))
-
-        # only sample interactions if there is a possibility of infection or message exchanges
-        if duration >= min(self.conf['MIN_MESSAGE_PASSING_DURATION'], self.conf['INFECTION_DURATION']):
-            # sample interactions with other humans at this location
-            # unknown are the ones that self is not aware of e.g. person sitting next to self in a cafe
-            # sleep is an inactive stage so we sample only unknown interactions
-            known_interactions, unknown_interactions = location.sample_interactions(self, unknown_only = type_of_activity == "sleep")
-            self.interact_with(known_interactions, type="known")
-            self.interact_with(unknown_interactions, type="unknown")
-
-        # environmental transmission
-        location.check_environmental_infection(self)
+            # environmental transmission
+            location.check_environmental_infection(self)
 
         # remove human from this location
         location.remove_human(self)
