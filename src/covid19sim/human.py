@@ -1047,10 +1047,10 @@ class Human(BaseHuman):
         yield self.env.timeout(duration) # Adds this process to the simulator's event queue
         # print("after", self.env.timestamp, self, location, duration)
 
-        if self.location.name == 'STORE:0':  # Instead of model these interactions explicitly, use a pretrained neural network
-            self.city.store0.add(self)  # Register this person with the local-level model
+        #if self.location.name == 'STORE:0':  # Instead of model these interactions explicitly, use a pretrained neural network
+        #    self.city.store0.add(self)  # Register this person with the local-level model
 
-        if self.location.name != 'STORE:0':  # Skip simulating state changes for these people
+        if self.location.name != 'STORE:0' or self.location.name == 'STORE:0':  # Baseline
 
             # only sample interactions if there is a possibility of infection or message exchanges
             if duration >= min(self.conf['MIN_MESSAGE_PASSING_DURATION'], self.conf['INFECTION_DURATION']):

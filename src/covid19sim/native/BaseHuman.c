@@ -754,8 +754,15 @@ static PyObject*              BaseHuman_get_is_infectious       (BaseHumanObject
                      self->env->ts_now >= self->ts_death;
     double td_infected = self->env->ts_now - self->ts_covid19_infection;
     double infectiousness_onset_secs = self->infectiousness_onset_days * SECONDS_PER_EPHEMERIS_DAY;
-    
+
     return PyBool_FromLong(!is_removed && (td_infected >= infectiousness_onset_secs));
+}
+static int                    BaseHuman_set_is_infectious                (BaseHumanObject* self, PyObject* val, void* closure){
+    if(PyErr_Occurred())
+        return -1;
+    self->ts_covid19_infection = self->env->ts_now;
+    self->infectiousness_onset_days = 0;
+    return 0;
 }
 static PyObject*              BaseHuman_get_is_removed          (BaseHumanObject* self, void* closure){
     int is_removed = self->env->ts_now >= self->ts_covid19_immunity ||
@@ -908,7 +915,7 @@ static PyGetSetDef BaseHuman_getset[] = {
     {"is_immune",            (getter)BaseHuman_get_is_immune,            (setter)BaseHuman_set_is_immune,           "Whether human is immune to COVID-19."},
     {"is_susceptible",       (getter)BaseHuman_get_is_susceptible,       NULL,                                      "Whether human is susceptible to being infected by COVID-19."},
     {"is_exposed",           (getter)BaseHuman_get_is_exposed,           NULL,                                      "Whether human has been exposed to COVID-19 but cannot yet infect anyone else."},
-    {"is_infectious",        (getter)BaseHuman_get_is_infectious,        NULL,                                      "Whether human is infectious, i.e. can infect others with COVID-19."},
+    {"is_infectious",        (getter)BaseHuman_get_is_infectious,        (setter)BaseHuman_set_is_infectious,                                      "Whether human is infectious, i.e. can infect others with COVID-19."},
     {"is_removed",           (getter)BaseHuman_get_is_removed,           NULL,                                      "Whether human is removed, i.e. is dead or has acquired immunity from COVID-19."},
     {"is_dead",              (getter)BaseHuman_get_is_dead,              NULL,                                      "Whether human is dead."},
     {"is_incubated",         (getter)BaseHuman_get_is_incubated,         NULL,                                      "Whether human has spent enough time to become symptomatic."},

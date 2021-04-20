@@ -29,6 +29,8 @@ if typing.TYPE_CHECKING:
     from covid19sim.human import Human
 from covid19sim.locations.hospital import Hospital, ICU
 
+import mlflow
+
 # used by - next_generation_matrix,
 SNAPSHOT_PERCENT_INFECTED_THRESHOLD = 2 # take a snapshot every time percent infected of population increases by this amount
 LOCATION_TYPES_TO_TRACK_MIXING = ["house", "work", "school", "other", "all"]
@@ -702,6 +704,7 @@ class Tracker(object):
         self.s_per_day.append(sum(h.is_susceptible for h in self.city.humans))
         self.e_per_day.append(sum(h.is_exposed for h in self.city.humans))
         self.i_per_day.append(sum(h.is_infectious for h in self.city.humans))
+        mlflow.log_metric('sum_is_infectious', self.i_per_day[-1])
         self.r_per_day.append(sum(h.is_removed for h in self.city.humans))
         self.ei_per_day.append(self.e_per_day[-1] + self.i_per_day[-1])
 

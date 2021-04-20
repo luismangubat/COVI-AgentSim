@@ -22,7 +22,7 @@ from covid19sim.inference.message_utils import UIDType, UpdateMessage, RealUserI
 from covid19sim.distribution_normalization.dist_utils import get_rec_level_transition_matrix
 from covid19sim.interventions.tracing_utils import get_tracing_method
 from covid19sim.locations.test_facility import TestFacility
-
+from covid19sim.locations import store0
 
 if typing.TYPE_CHECKING:
     from covid19sim.human import Human
@@ -40,13 +40,13 @@ class City:
 
     def __init__(
             self,
-            env: "Env",
-            n_people: int,
-            init_fraction_sick: float,
-            rng: np.random.RandomState,
-            x_range: typing.Tuple,
-            y_range: typing.Tuple,
-            conf: typing.Dict,
+            env: "Env" = None,
+            n_people: int = None,
+            init_fraction_sick: float = None,
+            rng: np.random.RandomState = None,
+            x_range: typing.Tuple = None,
+            y_range: typing.Tuple = None,
+            conf: typing.Dict = None,
             logfile: str = None,
     ):
         """
@@ -119,6 +119,9 @@ class City:
         # messages they consume from their own (simulation-only!) personal mailbox
         self.global_mailbox: SimulatorMailboxType = defaultdict(dict)
         self.tracker.initialize()
+
+        # Model STORE:0 as a black box
+        self.store0 = store0.Store0(env)
 
     def cleanup_global_mailbox(
             self,
