@@ -18,6 +18,8 @@ class Hospital(Location):
             kwargs (dict): all the args necessary for a Location's init
         """
 
+        # Add Lat long data from csv files
+
         super(Hospital, self).__init__( env=env,
                                         rng=rng,
                                         conf=conf,

@@ -329,6 +329,5 @@ def simulate(
 
     return city
 
-
 if __name__ == "__main__":
     main()

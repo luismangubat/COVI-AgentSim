@@ -13,6 +13,9 @@ from covid19sim.utils.constants import AGE_BIN_WIDTH_5
 from covid19sim.locations.location import Location, Household, School, WorkplaceA, WorkplaceB
 from covid19sim.locations.hospital import Hospital
 
+
+from map_ingenstion.attain_data import Data_Integration
+
 MAX_FAILED_ATTEMPTS_ALLOWED = 10000
 
 class HouseType(object):
@@ -353,17 +356,22 @@ def _build_and_allocate_hospitals(humans, city, conf, rng):
 
     # create one big hospital and control interactions there
     area = _get_random_area(1, HOSPITAL_PROPORTION_AREA * city.total_area, rng)
-    hospital = Hospital(
-                    env=city.env,
-                    rng=np.random.RandomState(city.rng.randint(2 ** 16)),
-                    conf=conf,
-                    name=f"HOSPITAL:0",
-                    lat=rng.randint(*city.x_range),
-                    lon=rng.randint(*city.y_range),
-                    area=area[0],
-                    hospital_bed_capacity=n_hospital_beds,
-                    icu_bed_capacity=n_icu_beds,
-                )
+
+    hospital_list = []
+    total_hopistals = Data_Integration.get_hospitals()
+    for x,y in total_hopistals:
+        hospital = Hospital(
+                        env=city.env,
+                        rng=np.random.RandomState(city.rng.randint(2 ** 16)),
+                        conf=conf,
+                        name=f"HOSPITAL:0",
+                        lat=x,
+                        lon=y,
+                        area=area[0],
+                        hospital_bed_capacity=n_hospital_beds,
+                        icu_bed_capacity=n_icu_beds,
+                    )
+        hospital_list.append(hospital)
 
 
     # select and allocate doctors and nurses to this hospital
@@ -381,7 +389,7 @@ def _build_and_allocate_hospitals(humans, city, conf, rng):
         hospital.assign_worker(nurse, doctor=False)
         doctors_and_nurses.remove(nurse)
 
-    city.hospitals = [hospital]
+    city.hospitals = total_hopistals
     return humans, city
 
 def _assign_senior_residences(humans, city, conf, rng):

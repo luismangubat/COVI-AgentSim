@@ -54,6 +54,8 @@ class Location(simpy.Resource):
     Class representing generic locations used in the simulator
     """
 
+    # Add Lat long, capacity data from csv files
+
     def __init__(self, env, rng, conf, area, name, location_type, lat, lon, capacity):
         """
         Locations are created with city.create_location(), not instantiated directly
@@ -97,6 +99,9 @@ class Location(simpy.Resource):
         self.binned_humans = {bin:OrderedSet() for bin in AGE_BIN_WIDTH_5}
         self.social_contact_factor = conf[f'{location_type}_CONTACT_FACTOR']
         self.contaminated_surface_probability = conf[f'{location_type}_SURFACE_PROB']
+
+        print("Lat:", self.lat, "Long:", self.lon)
+        print('conf:', self.conf)
 
         # occupation related constants
         OPEN_CLOSE_TIMES = conf[f'{location_type}_OPEN_CLOSE_HOUR_MINUTE']
@@ -482,6 +487,9 @@ class Household(Location):
     """
     Household location class, inheriting from covid19sim.base.Location
     """
+
+    
+    # Add Lat long, capacity data from csv files
     def __init__(self, **kwargs):
         """
         Args:

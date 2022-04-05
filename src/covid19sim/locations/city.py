@@ -24,6 +24,8 @@ from covid19sim.interventions.tracing_utils import get_tracing_method
 from covid19sim.locations.test_facility import TestFacility
 
 
+from map_ingenstion.attain_data import Data_Integration
+
 if typing.TYPE_CHECKING:
     from covid19sim.human import Human
     from covid19sim.utils.env import Env
@@ -49,6 +51,10 @@ class City:
             conf: typing.Dict,
             logfile: str = None,
     ):
+
+
+        # Add Lat long data from csv files
+
         """
         Constructs a city object.
 
@@ -691,8 +697,8 @@ class EmptyCity(City):
         self.conf = conf
         self.env = env
         self.rng = np.random.RandomState(rng.randint(2 ** 16))
-        self.x_range = x_range
-        self.y_range = y_range
+        self.x_range = (Data_Integration., 1000)
+        self.y_range = (-1000, 1000)
         self.total_area = (x_range[1] - x_range[0]) * (y_range[1] - y_range[0])
         self.n_people = 0
         self.logfile = None
@@ -724,8 +730,8 @@ class EmptyCity(City):
         self.stores = []
         self.senior_residences = []
         self.hospitals = []
-        self.miscs = []
-        self.parks = []
+        self.miscs = Data_Integration.get_misc()
+        self.parks = Data_Integration.get_parks() 
         self.schools = []
         self.workplaces = []
         self.global_mailbox: SimulatorMailboxType = defaultdict(dict)
